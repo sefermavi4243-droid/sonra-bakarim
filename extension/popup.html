@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sonra Bakarım</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon32.png" alt="" width="20" height="20" />
+      <span class="brand">Sonra Bakarım</span>
+      <button id="openPanel" class="ghost small" hidden>Panel</button>
+    </header>
+
+    <!-- Bağlı değilken -->
+    <section id="connect" hidden>
+      <h1>Hesabını bağla</h1>
+      <ol class="steps">
+        <li>Telegram'da botuna <b>bağla</b> yaz.</li>
+        <li>Gelen 6 haneli kodu aşağıya gir.</li>
+      </ol>
+      <form id="connectForm">
+        <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" aria-label="Bağlantı kodu" />
+        <button type="submit" class="primary">Bağla</button>
+      </form>
+      <details>
+        <summary>Sunucu adresi</summary>
+        <input id="server" type="url" spellcheck="false" aria-label="Sunucu adresi" />
+        <p class="hint">Sonra Bakarım'ın çalıştığı adres. Kendi bilgisayarındaysa değiştirme.</p>
+      </details>
+      <p id="connectError" class="error" role="alert"></p>
+    </section>
+
+    <!-- Bağlıyken -->
+    <section id="main" hidden>
+      <div class="page">
+        <div id="pageTitle" class="page-title"></div>
+        <div id="pageState" class="page-state"></div>
+      </div>
+      <textarea id="note" rows="2" placeholder="Not ekle (isteğe bağlı): ör. Cuma'ya kadar CV'yi güncelle"></textarea>
+      <button id="save" class="primary wide">Sonra bak</button>
+      <p id="saveStatus" class="status" role="status"></p>
+
+      <h2>Yaklaşanlar</h2>
+      <ul id="upcoming" class="list"></ul>
+      <p id="emptyUpcoming" class="hint" hidden>Yaklaşan bir son tarih yok.</p>
+
+      <footer>
+        <span class="hint">Kısayol: Alt+Shift+K ile hemen kaydet</span>
+        <button id="disconnect" class="ghost small">Bağlantıyı kes</button>
+      </footer>
+    </section>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

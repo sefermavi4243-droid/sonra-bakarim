@@ -24,6 +24,45 @@ okur, son tarihi bulur, ne gerektiğini çıkarır ve sen unutmadan önce hatır
    başlaman için bir plan mesajı, ardından bir dürtme ve son çağrı. Hatırlatmaların
    üzerindeki düğmelerle işi kapatır, erteler ya da vazgeçersin.
 
+## Her yerden yakala, tek yerde gör
+
+- **Telefondan:** Telegram'da bota ilet ya da paylaş.
+- **Tarayıcıdan:** uzantı simgesine tıkla, `Alt+Shift+K`'ye bas ya da sağ tıkla
+  "Sonra bak". Sayfa metni tarayıcının içinden okunduğu için LinkedIn gibi giriş
+  isteyen sayfalar da kaydedilir.
+- **Panelden:** link ya da notu yapıştır, Enter'a bas.
+
+Nereden gelirse gelsin hepsi aynı hesapta toplanır. Aynı ilanı telefondan ve
+tarayıcıdan iki kez gönderirsen tek kayıt kalır. Hatırlatmalar her zaman telefonuna düşer.
+
+## Sade bir takvim
+
+Web paneli tek bakışta neyin ne zaman bittiğini gösterir:
+
+- **Ajanda:** gecikmiş, bugün, yarın, bu hafta, sonra ve tarihsiz; üstte haftanın
+  tahmini iş yükü.
+- **Ay görünümü:** son tarihler ve etkinlikler ayrı renklerde; bir güne tıkla, o günün
+  işleri listelensin.
+- **Kayıt detayı:** son tarihin kaynaktaki cümlesi, işaretlenebilir gerekenler listesi,
+  tek tıkla Yaptım, Ertele, Tarihi değiştir, Takvime ekle.
+
+Kendi takvim uygulamanı kullanmak istersen her kartta bir **Takvime ekle** düğmesi var;
+telefonda dokunman yeter. Ya da kişisel abonelik adresini Outlook, Thunderbird veya
+Apple Takvim'e ekle, kayıtların orada kendiliğinden güncellensin.
+
+## Haftanı önceden gör
+
+Pazar akşamı kısa bir özet gelir: önümüzdeki yedi günün işleri gün gün, geçen hafta
+ne kadarını kapattığın ve çakışan günler için bir uyarı:
+
+```
+Dikkat: Perşembe günü 3 son tarih denk geliyor. "Burs başvurusu" ve
+"Staj başvurusu" için bu hafta başında başlamak iyi olur (toplam yaklaşık 2 saat).
+```
+
+İstersen son tarihi olan günlerde sabah 08.30'da yalnızca o günün işlerini içeren
+kısa bir brifing de alırsın.
+
 ## Öne çıkanlar
 
 - **Tarih uydurmaz.** Son tarih yalnızca içerikte gerçekten yazıyorsa kaydedilir. Her
@@ -61,10 +100,16 @@ okur, son tarihi bulur, ne gerektiğini çıkarır ve sen unutmadan önce hatır
 | --- | --- |
 | `listem` | Açık kayıtların, son tarihe göre sıralı |
 | `bugün` | Bugün ve yarın son tarihi olan kayıtlar |
+| `takvim` | Takvim abonelik adresi ve tüm kayıtların takvim dosyası |
+| `özet` | Haftalık özeti hemen gönderir |
+| `özet aç` / `özet kapat` | Pazar akşamı özetini açar ya da kapatır |
+| `brifing aç` / `brifing kapat` | Sabah brifingini açar ya da kapatır |
+| `bağla` | Tarayıcı uzantısı ya da web paneli için 6 haneli bağlantı kodu |
+| `cihazlarım` | Bağlı cihazlar; istediğini kaldırabilirsin |
 | `yardım` | Kısa kullanım bilgisi |
 | `verilerimi sil` | Tüm verilerini siler (onay ister) |
 
-Telegram'da aynı komutlar `/listem`, `/bugun`, `/yardim` olarak da çalışır.
+Telegram'da aynı komutlar `/listem`, `/bugun`, `/takvim`, `/bagla`, `/ozet_kapat` gibi de yazılabilir.
 
 ## Kanallar
 
@@ -124,6 +169,33 @@ scripts\install-autostart.ps1     # kaldırmak için: scripts\uninstall-autostar
 
 Günlükler `data\logs\` klasörüne yazılır.
 
+### Web paneli
+
+Bot çalışırken tarayıcıda **http://localhost:3000** adresini aç. Telegram'da bota
+`bağla` yaz ve gelen kodu gir. Bilgisayar başındaysan `npm run bagla` komutu da kod verir.
+
+### Tarayıcı uzantısı (Chrome, Edge, Brave)
+
+1. Tarayıcıda `chrome://extensions` adresini aç (Edge'de `edge://extensions`).
+2. Sağ üstten **Geliştirici modu**nu aç.
+3. **Paketlenmemiş öğe yükle** düğmesiyle projedeki `extension` klasörünü seç.
+4. Araç çubuğundaki Sonra Bakarım simgesine tıkla ve bağlantı kodunu gir.
+
+Kısayollar: `Alt+Shift+S` pencereyi açar, `Alt+Shift+K` sayfayı doğrudan kaydeder.
+
+### Telefondan panel ve Google Takvim (isteğe bağlı)
+
+Panel ve takvim aboneliği varsayılan olarak yalnızca bu bilgisayardan açılır. Telefondan
+erişmek ya da Google Takvim'e abone olmak için dışarıdan erişilebilen bir adres gerekir:
+
+```powershell
+cloudflared tunnel --url http://localhost:3000
+```
+
+Çıkan `https://….trycloudflare.com` adresini `.env` içinde `APP_URL` olarak yaz ve
+botu yeniden başlat. Hızlı tünel adresi her açılışta değişir; kalıcı adres için
+ücretsiz bir Cloudflare hesabıyla adlandırılmış tünel kurabilirsin.
+
 ### Önerilen Ollama ayarları
 
 ```powershell
@@ -147,6 +219,8 @@ Tüm ayarlar `.env` dosyasındadır; açıklamalı örnek `.env.example` içinde
 | `DATABASE_URL` | `./data/pg` | Boşsa gömülü veritabanı; `postgres://…` ile harici sunucu |
 | `APP_TIMEZONE` | `Europe/Istanbul` | Varsayılan saat dilimi |
 | `QUIET_HOURS` | `22:00-08:00` | Mesaj gönderilmeyen saatler |
+| `APP_URL` | `http://localhost:3000` | Panelin ve takvim aboneliğinin dışarıdan görünen adresi |
+| `HOST` | `127.0.0.1` | Sunucunun dinlediği adres |
 
 ## Geliştirme
 
@@ -156,6 +230,7 @@ npm test             # birim testleri (dış servis kullanmaz)
 npm run test:live    # gerçek dil modeli ve veritabanıyla testler
 npm run lint         # TypeScript tip kontrolü
 npm run rapor        # son kayıtların çıkan tarihlerini tablo olarak gösterir
+npm run bagla        # uzantı ya da panel için bağlantı kodu (bot açıkken)
 ```
 
 Teknik yığın: TypeScript, Hono, Drizzle ORM, zod, Vitest, luxon, Mozilla Readability.
@@ -164,6 +239,8 @@ Proje yapısı:
 
 ```
 src/
+  api/       uzantı ve panel için HTTP API
+  calendar/  takvim (.ics) üretimi
   webhook/   WhatsApp webhook (imza doğrulama)
   ingest/    link okuma, PDF, depolama, konuşma tanıma
   extract/   dil modeli istemcisi, istem ve şema, tarih doğrulama
@@ -171,6 +248,8 @@ src/
   notify/    kanal arayüzü, Telegram ve WhatsApp istemcileri, mesaj metinleri
   jobs/      işleme hattı, düğmeler, komutlar, zamanlayıcı
   db/        şema ve migration'lar
+web/         web paneli (derleme adımı yok)
+extension/   tarayıcı uzantısı (Manifest V3, derleme adımı yok)
 templates/   WhatsApp bilgilendirme şablonları
 tools/       yerel konuşma tanıma sunucusu
 docs/        ürün tanımı ve yol haritası

@@ -14,7 +14,8 @@
     "migrate": "tsx src/db/migrate.ts",
     "db:generate": "drizzle-kit generate",
     "lint": "tsc --noEmit",
-    "rapor": "tsx src/report.ts"
+    "rapor": "tsx src/report.ts",
+    "bagla": "tsx src/bagla.ts"
   },
   "license": "ISC",
   "dependencies": {

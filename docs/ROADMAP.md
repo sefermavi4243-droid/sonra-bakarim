@@ -106,7 +106,49 @@ görüntüsü, bir afiş fotoğrafı, bir PDF ve bir sesli not. Her biri için t
 | 9 | | | | |
 | 10 | | | | |
 
-## Faz 2–4
+## Paket 2+ (öne alındı)
+
+Kullanıcı isteğiyle Kapı 1 beklenmeden Faz 2 ve 3'ten şu parçalar öne alındı:
+takvim (Faz 2, özellik 8), pazar özeti (Faz 2, özellik 6), Chrome eklentisi ve web
+paneli (Faz 3, özellik 9 ve 11). Kapı 1 testi yine geçerli; Faz 2'nin kalanı (ön yazı,
+CV eşleştirme, pazar özeti tut/seç/vazgeç akışı) Kapı 1'den sonra.
+
+### A. Hesap bağlama
+- [x] `bağla` 6 haneli, 10 dakika geçerli, tek kullanımlık kod verir; veritabanında yalnızca özeti tutulur.
+- [x] Kod cihaz anahtarına dönüşür; anahtarın yalnızca SHA-256 özeti saklanır.
+- [x] Yeni cihaz bağlanınca bota bildirim gider; `cihazlarım` listeler ve kaldırır.
+- [x] 10 hatalı denemeden sonra 10 dakika kilit.
+- [x] `verilerimi sil` cihazları ve kodları da siler.
+
+### B. API ve birleşme
+- [x] Kayıtlar listelenir; Yaptım, Vazgeç, Yeniden aç, Ertele ve tarih değiştirme kanaldan bağımsız aynı kodla çalışır.
+- [x] Tarayıcıdan gelen kayıt aynı hattan geçer; kart Telegram'a "Tarayıcıdan kaydettim" diye düşer.
+- [x] Aynı link telefondan ve tarayıcıdan gelince tek kayıt kalır (ortak tekrar anahtarı).
+- [x] Başkasının kaydı ve kayıt durumu görünmez; panel çerezinde CSRF koruması var.
+
+### C. Web paneli
+- [x] Ajanda (gecikmiş, bugün, yarın, bu hafta, sonra, tarihsiz) ve haftalık yük özeti.
+- [x] Ay takvimi; son tarih ve etkinlik ayrı renkte; güne tıklayınca o günün listesi.
+- [x] Kayıt detayı: kanıt cümlesi, gerekenler listesi, Yaptım / Ertele / Tarih / Takvime ekle / Vazgeç.
+- [x] Hızlı kayıt kutusu, arşiv ve geri alma, ayarlar (takvim adresi, özetler, cihazlar).
+- [x] Açık ve koyu tema, dar ekranda tek sütun.
+
+### D. Tarayıcı uzantısı (Manifest V3)
+- [x] Sayfa metni tarayıcıdan okunur (giriş isteyen sayfalar dahil); sağ tık: sayfa, seçili metin, link, görsel.
+- [x] Kısayol Alt+Shift+K; bitince sistem bildirimi.
+- [x] Açılır pencerede yaklaşanlar ve "Yaptım"; rozette bugünkü iş sayısı.
+- [x] Kaydedilmiş sayfa açılınca günde bir kez hatırlatma.
+
+### E. Takvim
+- [x] Kayıt başına .ics (Telegram'da "Takvime ekle" düğmesi), `takvim` komutu, gizli abonelik adresi.
+- [x] Gün sonu son tarihi tüm gün olayı, saatli son tarih 30 dakikalık blok, etkinlik ayrı olay; uyarılar.
+
+### F. Özetler
+- [x] Pazar 19:00 sonrası haftalık özet; aynı güne 2+ son tarih düşerse uyarı ve öneri.
+- [x] İsteğe bağlı sabah brifingi (08:30); ikisi de günde en fazla bir kez, sessiz saatlere uyar.
+- [x] `özet`, `özet aç/kapat`, `brifing aç/kapat`.
+
+## Faz 2–4 (kalan)
 
 Faz 1 kapısı geçilince bu bölüm, Faz 1'deki gibi görevlere ve kabul ölçütlerine
 bölünür. Kapsam yukarıdaki tabloda.

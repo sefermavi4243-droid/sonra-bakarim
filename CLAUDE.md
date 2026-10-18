@@ -6,7 +6,7 @@ hazırlayan ve zamanında hatırlatan bir servis.
 
 - Ürünün tamamı: `docs/SPEC.md`
 - Fazlar, görevler ve kabul ölçütleri: `docs/ROADMAP.md`
-- Şu an üzerinde çalışılan faz: **Faz 1** (ROADMAP'te başka faza geçildiyse burayı güncelle)
+- Şu an üzerinde çalışılan faz: **Faz 1** + öne alınan **Paket 2+** (ROADMAP'te başka faza geçildiyse burayı güncelle)
 
 ## Değişmez ürün kuralları
 
@@ -58,7 +58,11 @@ src/
   notify/    Notifier arayüzü, kanallar, şablon gönderimi
   jobs/      zamanlayıcı ve kuyruk işleyici
   db/        Drizzle şeması ve migration'lar
+  api/       uzantı ve panel için HTTP API (cihaz anahtarı ya da panel çerezi)
+  calendar/  .ics üretimi
 templates/   WhatsApp şablon metinleri (Meta onayına gidecek hâliyle)
+web/         web paneli (derleme yok, düz HTML/CSS/JS)
+extension/   tarayıcı uzantısı (Manifest V3, derleme yok)
 tests/
 ```
 
@@ -71,6 +75,7 @@ tests/
 - `npm run db:generate` — `src/db/schema.ts` değişince yeni migration üretir.
 - `npm run lint` — `tsc --noEmit` (strict tip kontrolü).
 - `npm run rapor [-- adet]` — Kapı 1 tablosu: son kayıtların çıkan tarihleri ve kanıtları.
+- `npm run bagla` — bot açıkken, Telegram'a gitmeden uzantı/panel için bağlantı kodu verir.
 - `scripts\setup-whisper.ps1` — yerel sesi yazıya dökme sunucusunu kurar (bir kez).
 - `scripts\install-autostart.ps1` — bot ve Whisper Windows açılışında gizli başlar, çökerse
   yeniden kalkar; günlükler `data\logs\`. Kaldırmak için `scripts\uninstall-autostart.ps1`.

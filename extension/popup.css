@@ -1,0 +1,246 @@
+:root {
+  --bg: #ffffff;
+  --surface: #f6f7f8;
+  --text: #16181d;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --accent: #0f766e;
+  --accent-text: #ffffff;
+  --danger: #b42318;
+  --soon: #b54708;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171c;
+    --surface: #1e2128;
+    --text: #e8eaed;
+    --muted: #98a2b3;
+    --line: #2c313a;
+    --accent: #2dd4bf;
+    --accent-text: #062c28;
+    --danger: #f97066;
+    --soon: #fdb022;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+  padding: 14px 16px 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.brand {
+  font-weight: 650;
+  flex: 1;
+}
+
+h1 {
+  font-size: 17px;
+  margin: 4px 0 8px;
+}
+
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 18px 0 6px;
+}
+
+.steps {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+form {
+  display: flex;
+  gap: 8px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+#code {
+  font-size: 20px;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+textarea {
+  resize: vertical;
+  margin: 10px 0 8px;
+}
+
+input:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+button {
+  font: inherit;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button.wide {
+  width: 100%;
+  padding: 10px;
+}
+
+button.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+button.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+details {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+details input {
+  margin-top: 6px;
+}
+
+.page {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.page-title {
+  font-weight: 600;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.page-state {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.page-state.saved {
+  color: var(--accent);
+}
+
+.status {
+  min-height: 20px;
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.status.ok {
+  color: var(--accent);
+}
+
+.error,
+.status.err {
+  color: var(--danger);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.list li:last-child {
+  border-bottom: 0;
+}
+
+.list .what {
+  flex: 1;
+  min-width: 0;
+}
+
+.list .title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list .when {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.list .when.soon {
+  color: var(--soon);
+  font-weight: 600;
+}
+
+.list .when.late {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}

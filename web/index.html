@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Sonra Bakarım</title>
+    <link rel="icon" href="favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Giriş -->
+    <main id="login" class="login" hidden>
+      <div class="login-card">
+        <img src="icon.png" alt="" width="56" height="56" />
+        <h1>Sonra Bakarım</h1>
+        <p class="muted">Telegram'da botuna <b>bağla</b> yaz, gelen 6 haneli kodu buraya gir.</p>
+        <form id="loginForm">
+          <input id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" aria-label="Bağlantı kodu" required />
+          <button class="btn primary" type="submit">Giriş</button>
+        </form>
+        <p id="loginError" class="error" role="alert"></p>
+      </div>
+    </main>
+
+    <!-- Uygulama -->
+    <div id="app" hidden>
+      <header class="topbar">
+        <a class="brand" href="#ajanda"><img src="icon.png" alt="" width="26" height="26" /><span>Sonra Bakarım</span></a>
+        <form id="quickAdd" class="quick-add">
+          <input id="quickInput" placeholder="Link ya da not yapıştır, Enter'a bas" aria-label="Hızlı kayıt" autocomplete="off" />
+        </form>
+        <nav class="tabs" aria-label="Görünümler">
+          <a href="#ajanda" data-view="ajanda">Ajanda</a>
+          <a href="#takvim" data-view="takvim">Takvim</a>
+          <a href="#arsiv" data-view="arsiv">Arşiv</a>
+          <a href="#ayarlar" data-view="ayarlar">Ayarlar</a>
+        </nav>
+      </header>
+
+      <main class="content">
+        <section id="view-ajanda" class="view">
+          <div id="summary" class="summary"></div>
+          <div id="agenda"></div>
+        </section>
+
+        <section id="view-takvim" class="view" hidden>
+          <div class="cal-head">
+            <button class="btn icon" id="calPrev" aria-label="Önceki ay">&#8249;</button>
+            <h2 id="calTitle"></h2>
+            <button class="btn icon" id="calNext" aria-label="Sonraki ay">&#8250;</button>
+            <button class="btn" id="calToday">Bugün</button>
+          </div>
+          <div class="cal-legend">
+            <span><i class="dot deadline"></i>Son tarih</span>
+            <span><i class="dot event"></i>Etkinlik</span>
+          </div>
+          <div id="calendar" class="calendar" role="grid"></div>
+          <div id="dayList" class="day-list"></div>
+        </section>
+
+        <section id="view-arsiv" class="view" hidden>
+          <h2 class="section-title">Kapananlar</h2>
+          <div id="archive"></div>
+        </section>
+
+        <section id="view-ayarlar" class="view" hidden>
+          <div id="settings"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Kayıt detayı -->
+    <div id="drawerBackdrop" class="backdrop" hidden></div>
+    <aside id="drawer" class="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drawerTitle"></aside>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

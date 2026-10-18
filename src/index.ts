@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import { fileURLToPath } from 'node:url';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
@@ -12,6 +14,7 @@ import { createTranscriber } from './ingest/transcribe.js';
 import { CaptureLog } from './jobs/capture.js';
 import type { AppDeps } from './jobs/deps.js';
 import { processInbound } from './jobs/process.js';
+import { createLinkCode } from './jobs/link.js';
 import { gateReport } from './jobs/report.js';
 import { PerUserQueue } from './jobs/queue.js';
 import { startScheduler } from './jobs/scheduler.js';
@@ -36,6 +39,8 @@ try {
 }
 
 const { db } = createDb(config.DATABASE_URL);
+// Yeni sürümle gelen tablo değişiklikleri açılışta uygulanır.
+await migrate(db as never, { migrationsFolder: fileURLToPath(new URL('./db/migrations', import.meta.url)) });
 const store = createDrizzleStore(db);
 
 const whatsapp = config.whatsapp
@@ -103,6 +108,11 @@ const app = config.whatsapp
 
 // Uzantı ve web paneli için API, takvim aboneliği ve panelin kendisi.
 app.route('/', createApi({ app: deps, enqueue }));
+app.use('/*', async (c, next) => {
+  await next();
+  // Panel dosyaları her açılışta doğrulanır; güncelleme hemen yansır.
+  if (!c.req.path.startsWith('/api/')) c.header('cache-control', 'no-cache');
+});
 app.use('/*', serveStatic({ root: './web' }));
 
 // Süreç kapanırken yarım kalan mesajları yeniden kuyruğa al.
@@ -121,9 +131,15 @@ if (telegram) {
 startScheduler(deps);
 
 // Yönetim ucu yalnızca bu makineden erişilir; tünel ya da webhook üzerinden açılmaz.
-const admin = new Hono().get('/rapor', async (c) =>
-  c.text(await gateReport(db, Number(c.req.query('limit') ?? 10) || 10, config.APP_TIMEZONE)),
-);
+const admin = new Hono()
+  .get('/rapor', async (c) => c.text(await gateReport(db, Number(c.req.query('limit') ?? 10) || 10, config.APP_TIMEZONE)))
+  // `npm run bagla`: Telegram'a gitmeden bağlantı kodu (yalnızca bu makineden).
+  .post('/bagla', async (c) => {
+    const users = await store.listUsers();
+    if (users.length === 0) return c.text('Henüz kullanıcı yok. Önce bota bir mesaj at.', 404);
+    const user = users.sort((a, b) => +b.lastInboundAt! - +a.lastInboundAt!)[0]!;
+    return c.text(await createLinkCode(store, user, new Date()));
+  });
 serve({ fetch: admin.fetch, port: config.ADMIN_PORT, hostname: '127.0.0.1' });
 
 // Modeli ilk mesajdan önce belleğe yükle; ilk kayıt beklemesin.

@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Sonra Bakarım",
+  "version": "1.0.0",
+  "description": "Sonra bakacağın sayfayı tek tıkla kaydet; son tarihi bulunur, zamanı gelince telefonuna hatırlatılır.",
+  "default_locale": "tr",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Sonra bak",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["activeTab", "scripting", "contextMenus", "storage", "alarms", "notifications", "tabs"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Sonra Bakarım penceresini aç"
+    },
+    "kaydet": {
+      "suggested_key": { "default": "Alt+Shift+K" },
+      "description": "Bu sayfayı hemen kaydet"
+    }
+  }
+}
