@@ -1,6 +1,7 @@
 import type { Reminder } from '../db/schema.js';
 import { buildReminder } from '../notify/messages.js';
 import { type AppDeps, windowOpen } from './deps.js';
+import { runDigests } from './digest.js';
 
 export const MAX_ATTEMPTS = 4; // ilk deneme + 3 yeniden deneme, sonra `failed`
 const BATCH = 20;
@@ -66,6 +67,11 @@ export function startScheduler(deps: AppDeps, intervalMs = 60_000): () => void {
       await tick(deps);
     } catch (err) {
       deps.log('zamanlayıcı hatası', { err: String(err) });
+    }
+    try {
+      await runDigests(deps);
+    } catch (err) {
+      deps.log('özet hatası', { err: String(err) });
     } finally {
       running = false;
     }

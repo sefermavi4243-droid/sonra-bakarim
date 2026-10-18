@@ -1,12 +1,15 @@
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
+import { createApi } from './api/routes.js';
 import { ConfigError, loadConfig } from './config.js';
 import { createDb, createDrizzleStore } from './db/drizzleStore.js';
 import { createLlmClient } from './extract/llm.js';
 import { pdfPageImages } from './ingest/pdf.js';
 import { createLocalStorage, createSupabaseStorage } from './ingest/storage.js';
 import { createTranscriber } from './ingest/transcribe.js';
+import { CaptureLog } from './jobs/capture.js';
 import type { AppDeps } from './jobs/deps.js';
 import { processInbound } from './jobs/process.js';
 import { gateReport } from './jobs/report.js';
@@ -70,6 +73,8 @@ const deps: AppDeps = {
   llm: createLlmClient({ baseUrl: config.LLM_BASE_URL, apiKey: config.LLM_API_KEY }),
   extractModel: config.LLM_MODEL,
   renderPdf: (pdf) => pdfPageImages(pdf),
+  appUrl: config.APP_URL ?? `http://localhost:${config.PORT}`,
+  captures: new CaptureLog(),
   now: () => new Date(),
   log,
 };
@@ -95,6 +100,10 @@ const app = config.whatsapp
       log,
     })
   : new Hono().get('/health', (c) => c.json({ ok: true }));
+
+// Uzantı ve web paneli için API, takvim aboneliği ve panelin kendisi.
+app.route('/', createApi({ app: deps, enqueue }));
+app.use('/*', serveStatic({ root: './web' }));
 
 // Süreç kapanırken yarım kalan mesajları yeniden kuyruğa al.
 for (const msg of await store.listUnprocessedInbound(100)) enqueue(msg.messageId, msg.userId);
@@ -122,9 +131,10 @@ void deps.llm
   .chat({ model: config.LLM_MODEL, messages: [{ role: 'user', content: 'merhaba' }], max_tokens: 1 })
   .then(() => log('model hazır', { model: config.LLM_MODEL }))
   .catch((err) => log('model yüklenemedi; Ollama açık mı?', { err: String(err) }));
-serve({ fetch: app.fetch, port: config.PORT }, (info) =>
+serve({ fetch: app.fetch, port: config.PORT, hostname: config.HOST }, (info) =>
   log('sunucu açıldı', {
     port: info.port,
+    panel: deps.appUrl,
     kanallar: [whatsapp && 'whatsapp', telegram && 'telegram'].filter(Boolean),
     veritabani: /^postgres/.test(config.DATABASE_URL) ? 'postgres' : 'yerel',
   }),

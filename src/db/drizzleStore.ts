@@ -6,7 +6,7 @@ import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
-import { inboundMessages, interactions, items, preps, reminders, users } from './schema.js';
+import { devices, inboundMessages, interactions, items, linkCodes, preps, reminders, users } from './schema.js';
 import { OPEN_STATUSES, type Store } from './store.js';
 
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -224,9 +224,64 @@ export function createDrizzleStore(db: Db): Store {
         await tx.delete(preps).where(inArray(preps.itemId, itemIds));
         await tx.delete(items).where(eq(items.userId, userId));
         await tx.delete(inboundMessages).where(eq(inboundMessages.userId, userId));
+        await tx.delete(devices).where(eq(devices.userId, userId));
+        await tx.delete(linkCodes).where(eq(linkCodes.userId, userId));
         await tx.delete(users).where(eq(users.id, userId));
         return media.map((m) => m.path).filter((p): p is string => p !== null);
       });
+    },
+
+    async listItems(userId, statuses, limit) {
+      return db
+        .select()
+        .from(items)
+        .where(and(eq(items.userId, userId), inArray(items.status, statuses)))
+        .orderBy(sql`coalesce(${items.deadlineAt}, ${items.eventAt}) asc nulls last`, asc(items.createdAt))
+        .limit(limit);
+    },
+
+    async listUsers() {
+      return db.select().from(users);
+    },
+
+    async findUserByCalendarToken(token) {
+      return (await db.query.users.findFirst({ where: eq(users.calendarToken, token) })) ?? null;
+    },
+
+    async createLinkCode(userId, codeHash, expiresAt) {
+      await db.delete(linkCodes).where(eq(linkCodes.userId, userId));
+      await db.insert(linkCodes).values({ userId, codeHash, expiresAt });
+    },
+
+    async consumeLinkCode(codeHash, now) {
+      await db.delete(linkCodes).where(lt(linkCodes.expiresAt, now));
+      const rows = await db.delete(linkCodes).where(eq(linkCodes.codeHash, codeHash)).returning({ userId: linkCodes.userId });
+      return rows[0]?.userId ?? null;
+    },
+
+    async createDevice(input, at) {
+      const [row] = await db.insert(devices).values({ ...input, createdAt: at, lastSeenAt: at }).returning();
+      return row!;
+    },
+
+    async findDeviceByToken(tokenHash) {
+      return (await db.query.devices.findFirst({ where: eq(devices.tokenHash, tokenHash) })) ?? null;
+    },
+
+    async touchDevice(id, at) {
+      await db.update(devices).set({ lastSeenAt: at }).where(eq(devices.id, id));
+    },
+
+    async listDevices(userId) {
+      return db.select().from(devices).where(eq(devices.userId, userId)).orderBy(asc(devices.createdAt));
+    },
+
+    async deleteDevice(userId, id) {
+      const rows = await db
+        .delete(devices)
+        .where(and(eq(devices.userId, userId), eq(devices.id, id)))
+        .returning({ id: devices.id });
+      return rows.length === 1;
     },
   };
 }

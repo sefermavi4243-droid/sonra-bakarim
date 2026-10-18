@@ -1,4 +1,4 @@
-import type { Category, Item, ReminderKind } from '../db/schema.js';
+import type { Category, Device, Item, ReminderKind } from '../db/schema.js';
 import { SNOOZE_LABELS, type SnoozeOption } from '../rules/schedule.js';
 import { formatDateTime, formatShort } from '../rules/time.js';
 import type { Button, TemplateMessage } from './notifier.js';
@@ -14,7 +14,7 @@ export const TEXT = {
   help: [
     'Bana sonra bakacağın şeyi at: link, ekran görüntüsü, PDF ya da sesli not. Son tarihini bulup kaydederim.',
     'Zamanı gelince hatırlatırım; Yaptım, Ertele ya da Vazgeç ile kapatırsın.',
-    'Komutlar: listem, bugün, verilerimi sil.',
+    'Komutlar: listem, bugün, takvim, özet, bağla, cihazlarım, verilerimi sil.',
   ].join('\n'),
   emptyList: 'Açık kaydın yok. Bir link ya da ekran görüntüsü atarak başlayabilirsin.',
   nothingToday: 'Bugün ve yarın son tarihi olan bir kaydın yok.',
@@ -36,6 +36,17 @@ export const TEXT = {
   snoozeAsk: 'Ne zaman hatırlatayım?',
   voiceUnavailable: 'Sesli notları şimdilik yazıya dökemiyorum. Yazarak atar mısın?',
   transcribeFailed: 'Sesli notu anlayamadım. Tekrar dener misin ya da yazar mısın?',
+  deviceRemoved: 'Cihazın bağlantısını kaldırdım; artık kayıtlarına erişemez.',
+  deviceGone: 'Bu cihaz zaten bağlı değil.',
+  noDevices: 'Bağlı cihazın yok. Tarayıcı uzantısını ya da web panelini bağlamak için "bağla" yaz.',
+  noDateForCalendar: 'Bu kaydın tarihi yok; önce "Tarihi değiştir" ile bir tarih ver.',
+  calendarFileUnsupported: 'Bu kanaldan dosya gönderemiyorum; "takvim" yazınca gelen abonelik adresini kullanabilirsin.',
+  calendarFileCaption: 'Dokun, takvimine eklensin.',
+  digestOn: 'Tamam, her pazar akşamı haftalık özet göndereceğim.',
+  digestOff: 'Haftalık özeti kapattım. Açmak için "özet aç" yaz.',
+  briefOn: 'Tamam, son tarihi olan günlerde sabah 08.30\'da kısa bir brifing göndereceğim.',
+  briefOff: 'Sabah brifingini kapattım.',
+  noDigest: 'Önümüzdeki hafta için bir şey yok. Yeni bir şey kaydettiğinde özet de dolacak.',
 } as const;
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -65,13 +76,20 @@ export interface CardInput {
   defaultReason: string | null;
   question: string | null;
   deadlinePassed: boolean;
+  /** Kayıt tarayıcıdan geldiyse kartın başlığı bunu söyler. */
+  fromBrowser?: boolean;
+  /** "Takvime ekle" düğmesi (yalnızca dosya gönderebilen kanallarda). */
+  calendarButton?: boolean;
 }
 
 /** SPEC bölüm 4: kayıt kartı. */
-export function buildCard({ item, zone, defaultReason, question, deadlinePassed }: CardInput): { text: string; buttons: Button[] } {
+export function buildCard({ item, zone, defaultReason, question, deadlinePassed, fromBrowser, calendarButton }: CardInput): {
+  text: string;
+  buttons: Button[];
+} {
   const lines: string[] = [];
   const org = item.organization ? `, ${item.organization}` : '';
-  lines.push(`Kaydettim: *${item.title}*${org}`);
+  lines.push(`${fromBrowser ? 'Tarayıcıdan kaydettim' : 'Kaydettim'}: *${item.title}*${org}`);
   lines.push(`Tür: ${CATEGORY_LABEL[item.category]}`);
   if (item.eventAt) {
     lines.push(`Etkinlik: ${formatDateTime(item.eventAt, zone)}${item.location ? `, ${item.location}` : ''}`);
@@ -98,8 +116,38 @@ export function buildCard({ item, zone, defaultReason, question, deadlinePassed 
       { id: buttonId('ok', item.id), title: 'Tamam' },
       { id: buttonId('date', item.id), title: 'Tarihi değiştir' },
       { id: buttonId('prep', item.id), title: 'Hemen hazırla' },
+      ...(calendarButton && (item.deadlineAt || item.eventAt) ? [{ id: buttonId('cal', item.id), title: 'Takvime ekle' }] : []),
     ],
   };
+}
+
+export function linkCodeMessage(code: string, minutes: number): string {
+  return [
+    `Bağlantı kodun: *${code.slice(0, 3)} ${code.slice(3)}*`,
+    `Tarayıcı uzantısında ya da web panelinde bu kodu gir. ${minutes} dakika geçerli, tek kullanımlık.`,
+  ].join('\n');
+}
+
+export function devicesMessage(devices: Device[], zone: string): string {
+  if (devices.length === 0) return TEXT.noDevices;
+  const lines = devices.map((d, i) => {
+    const seen = d.lastSeenAt ? `, son kullanım ${formatShort(d.lastSeenAt, zone)}` : '';
+    return `${i + 1}. ${d.name}${seen}`;
+  });
+  return ['Bağlı cihazların:', ...lines].join('\n');
+}
+
+/** Cihaz kaldırma düğmeleri; WhatsApp sınırı nedeniyle en fazla 3. */
+export function deviceButtons(devices: Device[]): Button[] {
+  return devices.slice(0, 3).map((d, i) => ({ id: buttonId('devdel', d.id), title: `${i + 1}. cihazı kaldır` }));
+}
+
+export function calendarMessage(url: string, count: number): string {
+  return [
+    `Takvim abonelik adresin:\n${url}`,
+    'Outlook, Thunderbird ya da Apple Takvim\'de "abone ol" diyerek ekleyebilirsin; kayıtların kendiliğinden güncellenir.',
+    count ? 'Aşağıdaki dosyaya dokunarak şu anki kayıtları tek seferde de ekleyebilirsin.' : 'Henüz tarihli bir kaydın yok.',
+  ].join('\n\n');
 }
 
 export function alreadySaved(item: Item, zone: string): string {

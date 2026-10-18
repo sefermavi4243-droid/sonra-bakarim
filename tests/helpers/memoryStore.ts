@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { InboundMessage, Item, Reminder, User } from '../../src/db/schema.js';
+import type { Device, InboundMessage, Item, ItemStatus, Reminder, User } from '../../src/db/schema.js';
 import { OPEN_STATUSES, type Store } from '../../src/db/store.js';
 
 /** Testler için bellek içi Store. Davranışı drizzleStore ile aynı tutulur. */
@@ -10,6 +10,8 @@ export class MemoryStore implements Store {
   inbound: InboundMessage[] = [];
   interactions: { userId: string; itemId: string | null; action: string; at: Date }[] = [];
   preps: { itemId: string; kind: string; content: string }[] = [];
+  devices: Device[] = [];
+  linkCodes: { codeHash: string; userId: string; expiresAt: Date }[] = [];
 
   async touchUser(input: Parameters<Store['touchUser']>[0], at: Date): Promise<User> {
     let u = this.users.find((x) => x.address === input.address);
@@ -27,6 +29,11 @@ export class MemoryStore implements Store {
         pendingAction: null,
         lastInboundAt: at,
         createdAt: at,
+        calendarToken: null,
+        weeklyDigest: true,
+        morningBrief: false,
+        lastDigestAt: null,
+        lastBriefAt: null,
       };
       this.users.push(u);
     } else {
@@ -194,7 +201,64 @@ export class MemoryStore implements Store {
     this.preps = this.preps.filter((p) => !itemIds.has(p.itemId));
     this.items = this.items.filter((i) => i.userId !== userId);
     this.inbound = this.inbound.filter((m) => m.userId !== userId);
+    this.devices = this.devices.filter((d) => d.userId !== userId);
+    this.linkCodes = this.linkCodes.filter((c) => c.userId !== userId);
     this.users = this.users.filter((u) => u.id !== userId);
     return paths;
+  }
+
+  async listItems(userId: string, statuses: ItemStatus[], limit: number) {
+    const key = (i: Item) => i.deadlineAt ?? i.eventAt;
+    return this.items
+      .filter((i) => i.userId === userId && statuses.includes(i.status))
+      .sort((a, b) => {
+        const ka = key(a);
+        const kb = key(b);
+        if (ka && kb) return +ka - +kb || +a.createdAt - +b.createdAt;
+        if (ka) return -1;
+        if (kb) return 1;
+        return +a.createdAt - +b.createdAt;
+      })
+      .slice(0, limit)
+      .map((i) => ({ ...i }));
+  }
+  async listUsers() {
+    return this.users.map((u) => ({ ...u }));
+  }
+  async findUserByCalendarToken(token: string) {
+    const u = this.users.find((x) => x.calendarToken === token);
+    return u ? { ...u } : null;
+  }
+  async createLinkCode(userId: string, codeHash: string, expiresAt: Date) {
+    this.linkCodes = this.linkCodes.filter((c) => c.userId !== userId);
+    this.linkCodes.push({ userId, codeHash, expiresAt });
+  }
+  async consumeLinkCode(codeHash: string, now: Date) {
+    this.linkCodes = this.linkCodes.filter((c) => c.expiresAt >= now);
+    const c = this.linkCodes.find((x) => x.codeHash === codeHash);
+    if (!c) return null;
+    this.linkCodes = this.linkCodes.filter((x) => x !== c);
+    return c.userId;
+  }
+  async createDevice(input: { userId: string; name: string; tokenHash: string }, at: Date) {
+    const d: Device = { id: randomUUID(), ...input, createdAt: at, lastSeenAt: at };
+    this.devices.push(d);
+    return { ...d };
+  }
+  async findDeviceByToken(tokenHash: string) {
+    const d = this.devices.find((x) => x.tokenHash === tokenHash);
+    return d ? { ...d } : null;
+  }
+  async touchDevice(id: string, at: Date) {
+    const d = this.devices.find((x) => x.id === id);
+    if (d) d.lastSeenAt = at;
+  }
+  async listDevices(userId: string) {
+    return this.devices.filter((d) => d.userId === userId).map((d) => ({ ...d }));
+  }
+  async deleteDevice(userId: string, id: string) {
+    const before = this.devices.length;
+    this.devices = this.devices.filter((d) => !(d.userId === userId && d.id === id));
+    return this.devices.length < before;
   }
 }

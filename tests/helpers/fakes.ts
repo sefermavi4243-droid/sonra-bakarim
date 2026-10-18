@@ -2,7 +2,8 @@ import { DateTime } from 'luxon';
 import type { Extraction } from '../../src/extract/schema.js';
 import type { ChatRequest, LlmClient } from '../../src/extract/llm.js';
 import type { AppDeps } from '../../src/jobs/deps.js';
-import type { Button, Notifier, SendResult, TemplateMessage } from '../../src/notify/notifier.js';
+import type { Button, Notifier, OutgoingFile, SendResult, TemplateMessage } from '../../src/notify/notifier.js';
+import { CaptureLog } from '../../src/jobs/capture.js';
 import { MemoryStore } from './memoryStore.js';
 
 export const ZONE = 'Europe/Istanbul';
@@ -12,7 +13,8 @@ export const show = (d: Date) => DateTime.fromJSDate(d, { zone: ZONE }).toFormat
 export type Sent =
   | { type: 'text'; to: string; text: string }
   | { type: 'buttons'; to: string; text: string; buttons: Button[] }
-  | { type: 'template'; to: string; template: TemplateMessage };
+  | { type: 'template'; to: string; template: TemplateMessage }
+  | { type: 'file'; to: string; file: OutgoingFile; caption?: string };
 
 export class FakeNotifier implements Notifier {
   readonly channel = 'whatsapp' as const;
@@ -40,12 +42,17 @@ export class FakeNotifier implements Notifier {
   sendTemplate(to: string, template: TemplateMessage) {
     return this.record({ type: 'template', to, template });
   }
+  sendFile(to: string, file: OutgoingFile, caption?: string) {
+    return this.record({ type: 'file', to, file, caption });
+  }
   last(): Sent {
     return this.sent[this.sent.length - 1]!;
   }
   lastText(): string {
     const s = this.last();
-    return s.type === 'template' ? s.template.bodyParams.join(' | ') : s.text;
+    if (s.type === 'template') return s.template.bodyParams.join(' | ');
+    if (s.type === 'file') return s.caption ?? '';
+    return s.text;
   }
 }
 
@@ -149,6 +156,8 @@ export function createEnv(now = ist('2026-10-20T12:00')): TestEnv {
     llm: llm.client(),
     extractModel: 'test-model',
     renderPdf: async () => pdfPages.splice(0),
+    appUrl: 'http://localhost:3000',
+    captures: new CaptureLog(),
     fetch: fakeFetch,
     safeHost: async () => true,
     now: () => clock.now,

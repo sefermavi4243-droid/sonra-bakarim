@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { InboundMessage, User } from '../db/schema.js';
+import type { InboundMessage, Item, User } from '../db/schema.js';
 import { extract, type ExtractInput } from '../extract/extract.js';
 import { finalizeExtraction } from '../extract/finalize.js';
 import { canonicalUrl, findUrl, readLink } from '../ingest/link.js';
@@ -7,9 +7,13 @@ import { PDF_MIN_TEXT, pdfText } from '../ingest/pdf.js';
 import { TEXT, alreadySaved } from '../notify/messages.js';
 import { classify, type Incoming, type RawMessage } from '../webhook/parse.js';
 import { applyDateAnswer, handleButton } from './buttons.js';
+import { handleCapture, linkDedupeHash } from './capture.js';
 import { deleteAllData, parseCommand, runCommand } from './commands.js';
 import { type AppDeps, prefsOf } from './deps.js';
 import { saveItem, type SourceInfo } from './items.js';
+
+/** `inbound_messages.type` değeri: tarayıcıdan gelen kayıt isteği. */
+export const CAPTURE_TYPE = 'capture';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
 type ImageType = (typeof IMAGE_TYPES)[number];
@@ -21,6 +25,11 @@ export async function processInbound(deps: AppDeps, msg: InboundMessage): Promis
   const user = await deps.store.getUser(msg.userId);
   try {
     if (!user) return;
+    // Tarayıcı uzantısından ya da panelden gelen kayıt isteği (sohbet mesajı değil).
+    if (msg.type === CAPTURE_TYPE) {
+      await handleCapture(deps, user, msg.messageId, msg.payload);
+      return;
+    }
     await deps.markRead?.(msg.messageId).catch(() => undefined);
     await route(deps, user, classify(msg.payload as RawMessage));
   } catch (err) {
@@ -101,7 +110,7 @@ async function ingestLink(deps: AppDeps, user: User, url: string, message: strin
     await deps.notifier.sendText(user.address, TEXT.linkNeedsScreenshot);
     return;
   }
-  const dedupeHash = hash(canonical);
+  const dedupeHash = linkDedupeHash(canonical);
   if (await sendIfDuplicate(deps, user, dedupeHash)) return;
 
   const page = await readLink(url, { fetch: deps.fetch, safeHost: deps.safeHost });
@@ -189,7 +198,7 @@ async function ingestMedia(deps: AppDeps, user: User, m: Extract<Incoming, { kin
   await deps.notifier.sendText(to, TEXT.unsupportedMedia);
 }
 
-/** Ortak hat: modelle çıkar, kurallardan geçir, kaydet, kartı gönder. */
+/** Ortak hat (sohbet): çıkar ve kaydet; olmazsa kullanıcıya nedenini yaz. */
 async function ingest(
   deps: AppDeps,
   user: User,
@@ -198,26 +207,40 @@ async function ingest(
   source: SourceInfo,
   storeMedia?: () => Promise<string>,
 ): Promise<void> {
+  const outcome = await extractAndSave(deps, user, input, inputText, source, { storeMedia });
+  if (outcome.kind === 'unreadable') await deps.notifier.sendText(user.address, TEXT.unreadable);
+  if (outcome.kind === 'off_topic') await deps.notifier.sendText(user.address, TEXT.offTopic);
+}
+
+export type IngestOutcome = { kind: 'saved'; item: Item } | { kind: 'unreadable' } | { kind: 'off_topic' };
+
+/**
+ * Kanaldan bağımsız hat: modelle çıkar, kurallardan geçir, kaydet ve kartı gönder.
+ * Başarısızlıkta mesaj göndermez; sonucu döndürür (tarayıcı uzantısı da kullanır).
+ */
+export async function extractAndSave(
+  deps: AppDeps,
+  user: User,
+  input: ExtractInput,
+  inputText: string,
+  source: SourceInfo,
+  opts: { storeMedia?: () => Promise<string>; fromBrowser?: boolean } = {},
+): Promise<IngestOutcome> {
   const now = deps.now();
   const x = await extract(input, { client: deps.llm, model: deps.extractModel, now, zone: user.timezone, log: deps.log });
-  if (!x) {
-    await deps.notifier.sendText(user.address, TEXT.unreadable);
-    return;
-  }
-  if (x.off_topic) {
-    await deps.notifier.sendText(user.address, TEXT.offTopic);
-    return;
-  }
+  if (!x) return { kind: 'unreadable' };
+  if (x.off_topic) return { kind: 'off_topic' };
   const finalized = finalizeExtraction(x, inputText, now, prefsOf(user));
   let mediaPath: string | null = null;
-  if (storeMedia) {
+  if (opts.storeMedia) {
     try {
-      mediaPath = await storeMedia();
+      mediaPath = await opts.storeMedia();
     } catch (err) {
       deps.log('medya depolanamadı', { err: String(err) });
     }
   }
-  await saveItem(deps, user, finalized, { ...source, mediaPath });
+  const item = await saveItem(deps, user, finalized, { ...source, mediaPath }, { fromBrowser: opts.fromBrowser });
+  return { kind: 'saved', item };
 }
 
 async function sendIfDuplicate(deps: AppDeps, user: User, dedupeHash: string): Promise<boolean> {

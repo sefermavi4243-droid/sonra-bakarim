@@ -15,6 +15,12 @@ export interface TemplateMessage {
   buttonPayloads: string[];
 }
 
+export interface OutgoingFile {
+  name: string;
+  mimeType: string;
+  data: Buffer;
+}
+
 export interface SendResult {
   messageId: string | null;
 }
@@ -30,6 +36,8 @@ export interface Notifier {
   sendButtons(to: string, text: string, buttons: Button[]): Promise<SendResult>;
   /** 24 saat penceresi kapalıyken yalnızca onaylı şablon gönderilir. */
   sendTemplate(to: string, template: TemplateMessage): Promise<SendResult>;
+  /** Dosya (ör. takvim .ics) gönderir; desteklemeyen kanalda tanımsızdır. */
+  sendFile?(to: string, file: OutgoingFile, caption?: string): Promise<SendResult>;
 }
 
 export class NotImplementedChannelError extends Error {}
@@ -57,5 +65,10 @@ export function createChannelRouter(channels: { whatsapp?: Notifier | null; tele
     sendText: async (to, text) => pick(to).sendText(to, text),
     sendButtons: async (to, text, buttons) => pick(to).sendButtons(to, text, buttons),
     sendTemplate: async (to, template) => pick(to).sendTemplate(to, template),
+    sendFile: async (to, file, caption) => {
+      const n = pick(to);
+      if (!n.sendFile) throw new NotImplementedChannelError(`${n.channel} kanalı dosya göndermiyor`);
+      return n.sendFile(to, file, caption);
+    },
   };
 }

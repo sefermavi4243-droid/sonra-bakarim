@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -71,6 +72,38 @@ export const users = pgTable('users', {
   pendingAction: jsonb('pending_action').$type<PendingAction | null>(),
   lastInboundAt: tz('last_inbound_at'),
   createdAt: tz('created_at').notNull().defaultNow(),
+  // Takvim aboneliği için gizli adres parçası; ilk istendiğinde üretilir.
+  calendarToken: text('calendar_token').unique(),
+  // Pazar akşamı haftalık özet ve isteğe bağlı sabah brifingi.
+  weeklyDigest: boolean('weekly_digest').notNull().default(true),
+  morningBrief: boolean('morning_brief').notNull().default(false),
+  lastDigestAt: tz('last_digest_at'),
+  lastBriefAt: tz('last_brief_at'),
+});
+
+/** Bağlı cihaz (tarayıcı uzantısı, web paneli). Anahtarın yalnızca SHA-256 özeti tutulur. */
+export const devices = pgTable(
+  'devices',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    createdAt: tz('created_at').notNull().defaultNow(),
+    lastSeenAt: tz('last_seen_at'),
+  },
+  (t) => [uniqueIndex('devices_token_hash_key').on(t.tokenHash), index('devices_user_idx').on(t.userId)],
+);
+
+/** `bağla` komutunun verdiği tek kullanımlık 6 haneli kodlar (özet olarak). */
+export const linkCodes = pgTable('link_codes', {
+  codeHash: text('code_hash').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: tz('expires_at').notNull(),
 });
 
 export const items = pgTable(
@@ -170,6 +203,7 @@ export const inboundMessages = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
+export type Device = typeof devices.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type Reminder = typeof reminders.$inferSelect;

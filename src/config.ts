@@ -55,6 +55,10 @@ const envSchema = z
         return a !== undefined && b !== undefined && hhmm.test(a) && hhmm.test(b);
       }, 'SS:DD-SS:DD biçiminde olmalı (ör. 22:00-08:00)'),
     PORT: z.coerce.number().int().positive().default(3000),
+    /** Sunucunun dinlediği adres. Varsayılan yalnızca bu bilgisayar; tünel de buraya bağlanır. */
+    HOST: required.default('127.0.0.1'),
+    /** Panelin ve takvim aboneliğinin dışarıdan görünen adresi; boşsa http://localhost:PORT. */
+    APP_URL: required.url().optional(),
     /** Yalnızca 127.0.0.1'i dinleyen yönetim ucu (rapor). */
     ADMIN_PORT: z.coerce.number().int().positive().default(3001),
   })

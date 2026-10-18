@@ -1,5 +1,5 @@
 import type { RawMessage } from '../webhook/parse.js';
-import type { Button, Notifier, SendResult, TemplateMessage } from './notifier.js';
+import type { Button, Notifier, OutgoingFile, SendResult, TemplateMessage } from './notifier.js';
 
 /**
  * Telegram Bot API kanalı. Adresler `tg:<chat_id>`, medya kimlikleri `tg:<file_id>`,
@@ -80,9 +80,27 @@ export class TelegramClient implements Notifier {
   }
 
   sendButtons(to: string, text: string, buttons: Button[]): Promise<SendResult> {
-    return this.send(to, text, {
-      reply_markup: { inline_keyboard: [buttons.map((b) => ({ text: b.title, callback_data: b.id }))] },
-    });
+    // Üçten fazla düğme ikişerli satırlara bölünür; dar ekranda sıkışmasın.
+    const perRow = buttons.length > 3 ? 2 : 3;
+    const rows: { text: string; callback_data: string }[][] = [];
+    for (let i = 0; i < buttons.length; i += perRow) {
+      rows.push(buttons.slice(i, i + perRow).map((b) => ({ text: b.title, callback_data: b.id })));
+    }
+    return this.send(to, text, { reply_markup: { inline_keyboard: rows } });
+  }
+
+  async sendFile(to: string, file: OutgoingFile, caption?: string): Promise<SendResult> {
+    const form = new FormData();
+    form.append('chat_id', chatIdOf(to));
+    form.append('document', new Blob([new Uint8Array(file.data)], { type: file.mimeType }), file.name);
+    if (caption) {
+      form.append('caption', toTelegramHtml(caption));
+      form.append('parse_mode', 'HTML');
+    }
+    const res = await this.fetch(`${this.base}/sendDocument`, { method: 'POST', body: form, signal: AbortSignal.timeout(30_000) });
+    const body = (await res.json().catch(() => null)) as { ok?: boolean; result?: { message_id: number }; description?: string } | null;
+    if (!res.ok || !body?.ok) throw new TelegramApiError(`Telegram API ${res.status}: ${body?.description ?? ''}`);
+    return { messageId: String(body.result?.message_id ?? '') };
   }
 
   /** Telegram'da 24 saat penceresi yok; şablon gerekmez. Çağrılırsa kod hatasıdır. */

@@ -1,4 +1,5 @@
 import type {
+  Device,
   InboundMessage,
   Item,
   ItemStatus,
@@ -31,9 +32,14 @@ export interface NewInbound {
   payload: Record<string, unknown>;
 }
 
-export type UserPatch = Partial<Pick<User, 'displayName' | 'pendingAction' | 'lastInboundAt'>>;
+export type UserPatch = Partial<
+  Pick<
+    User,
+    'displayName' | 'pendingAction' | 'lastInboundAt' | 'calendarToken' | 'weeklyDigest' | 'morningBrief' | 'lastDigestAt' | 'lastBriefAt'
+  >
+>;
 export type ItemPatch = Partial<
-  Pick<Item, 'deadlineAt' | 'deadlineSource' | 'deadlineEvidence' | 'status' | 'closedAt'>
+  Pick<Item, 'title' | 'deadlineAt' | 'deadlineSource' | 'deadlineEvidence' | 'eventAt' | 'status' | 'closedAt'>
 >;
 
 /**
@@ -82,6 +88,21 @@ export interface Store {
 
   /** Kullanıcının tüm verisini siler; silinmesi gereken medya yollarını döndürür. */
   deleteUserData(userId: string): Promise<string[]>;
+
+  /** Kullanıcının kayıtları (verilen durumlarda); son tarih ya da etkinlik zamanına göre, tarihsizler sonda. */
+  listItems(userId: string, statuses: ItemStatus[], limit: number): Promise<Item[]>;
+  listUsers(): Promise<User[]>;
+  findUserByCalendarToken(token: string): Promise<User | null>;
+
+  /** Kullanıcının önceki kodlarını silip yenisini yazar. */
+  createLinkCode(userId: string, codeHash: string, expiresAt: Date): Promise<void>;
+  /** Kod geçerliyse siler ve sahibini döndürür; tek kullanımlıktır. */
+  consumeLinkCode(codeHash: string, now: Date): Promise<string | null>;
+  createDevice(input: { userId: string; name: string; tokenHash: string }, at: Date): Promise<Device>;
+  findDeviceByToken(tokenHash: string): Promise<Device | null>;
+  touchDevice(id: string, at: Date): Promise<void>;
+  listDevices(userId: string): Promise<Device[]>;
+  deleteDevice(userId: string, id: string): Promise<boolean>;
 }
 
 export const OPEN_STATUSES: ItemStatus[] = ['open', 'snoozed'];

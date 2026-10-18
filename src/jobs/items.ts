@@ -36,7 +36,13 @@ export async function closeItem(store: Store, itemId: string, status: Extract<It
 }
 
 /** Çıkarılan bilgiden kaydı oluşturur, hatırlatmaları kurar ve kartı gönderir. */
-export async function saveItem(deps: AppDeps, user: User, f: Finalized, source: SourceInfo): Promise<Item> {
+export async function saveItem(
+  deps: AppDeps,
+  user: User,
+  f: Finalized,
+  source: SourceInfo,
+  opts: { fromBrowser?: boolean } = {},
+): Promise<Item> {
   const now = deps.now();
   const item = await deps.store.createItem({
     userId: user.id,
@@ -65,6 +71,9 @@ export async function saveItem(deps: AppDeps, user: User, f: Finalized, source: 
     defaultReason: f.defaultReason,
     question: f.question,
     deadlinePassed: item.deadlineAt !== null && item.deadlineAt <= now,
+    fromBrowser: opts.fromBrowser,
+    // Telegram dosya gönderebilir; WhatsApp'ta 3 düğme sınırı var.
+    calendarButton: user.address.startsWith('tg:'),
   });
   await deps.notifier.sendButtons(user.address, card.text, card.buttons);
   return item;

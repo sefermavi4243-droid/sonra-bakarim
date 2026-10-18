@@ -5,6 +5,7 @@ import type { MediaStorage } from '../ingest/storage.js';
 import type { Transcriber } from '../ingest/transcribe.js';
 import type { Notifier } from '../notify/notifier.js';
 import type { UserPrefs } from '../rules/time.js';
+import type { CaptureLog } from './capture.js';
 
 export interface MediaSource {
   downloadMedia(mediaId: string): Promise<{ data: Buffer; mimeType: string }>;
@@ -26,6 +27,10 @@ export interface AppDeps {
   safeHost?: (hostname: string) => Promise<boolean>;
   /** Gelen mesajı okundu işaretleyip "yazıyor…" gösterir; isteğe bağlı. */
   markRead?: (messageId: string) => Promise<void>;
+  /** Panelin ve takvim aboneliğinin dışarıdan görünen adresi (ör. http://localhost:3000). */
+  appUrl: string;
+  /** Tarayıcıdan gönderilen kayıtların durumu (uzantı sorar). */
+  captures: CaptureLog;
   now: () => Date;
   log: (msg: string, extra?: unknown) => void;
 }
