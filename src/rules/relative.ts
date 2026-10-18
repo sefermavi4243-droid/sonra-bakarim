@@ -50,6 +50,30 @@ function normalize(text: string): string {
   return text.toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim();
 }
 
+const MONTH_WORDS = Object.keys(MONTHS);
+
+/**
+ * Konuşma dilindeki saat: "12'de", "3'te", "9.30'da", "14:00'te". Önünde ay adı ya da
+ * "ayın" varsa gündür ("Ekim 24'te"), saat sayılmaz. 1–6 arası, sabah/gece denmedikçe
+ * öğleden sonradır ("cuma 3'te" → 15:00); insanlar gece 3 için bunu pek kullanmaz.
+ */
+function suffixedTime(t: string): { hour: number; minute: number } | null {
+  const re = /(?<![\d.:/])(\d{1,2})(?:[:.](\d{2}))?['’](?:de|da|te|ta)(?!\p{L})/gu;
+  for (const m of t.matchAll(re)) {
+    const before = t.slice(0, m.index).trimEnd();
+    const prevWord = /(\p{L}+)$/u.exec(before)?.[1] ?? '';
+    if (prevWord === 'ayın' || prevWord === 'ayin' || MONTH_WORDS.includes(prevWord)) continue;
+    let hour = Number(m[1]);
+    const minute = m[2] ? Number(m[2]) : 0;
+    if (hour > 23 || minute > 59) continue;
+    const morning = new RegExp(`${W}(sabah|gece)`, 'u').test(t);
+    const evening = new RegExp(`${W}(akşam|aksam|öğleden sonra|ogleden sonra)`, 'u').test(t);
+    if (hour >= 1 && hour < 12 && (evening || (hour <= 6 && !morning))) hour += 12;
+    return { hour, minute };
+  }
+  return null;
+}
+
 function findTime(t: string): { hour: number; minute: number } | null {
   const evening = new RegExp(`${W}(?:akşam|aksam) (?:saat )?(\\d{1,2})(?:[:.](\\d{2}))?(?![\\d.:/])`, 'u').exec(t);
   if (evening) {
@@ -72,6 +96,8 @@ function findTime(t: string): { hour: number; minute: number } | null {
     if (hour < 12 && new RegExp(`${W}(akşam|aksam|gece|öğleden sonra|ogleden sonra)`, 'u').test(t)) hour += 12;
     return { hour, minute };
   }
+  const suffixed = suffixedTime(t);
+  if (suffixed) return suffixed;
   if (new RegExp(`${W}(sabah)`, 'u').test(t)) return { hour: 9, minute: 0 };
   if (new RegExp(`${W}(öğle|ogle)(?!den)`, 'u').test(t)) return { hour: 12, minute: 0 };
   if (new RegExp(`${W}(akşam|aksam)`, 'u').test(t)) return { hour: 20, minute: 0 };

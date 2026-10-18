@@ -243,6 +243,18 @@ describe('parseTurkishDate — göreli tarihler', () => {
     expect(p('10:00')).toBe('2026-10-21T10:00');
   });
 
+  it('konuşma dilinde saat: 12\'de, 3\'te, 9.30\'da', () => {
+    expect(p("Cuma gün 12'de bitirmesi gerekiyor")).toBe('2026-10-23T12:00');
+    expect(p("cuma 3'te")).toBe('2026-10-23T15:00');
+    expect(p("yarın sabah 6'da")).toBe('2026-10-21T06:00');
+    expect(p("yarın akşam 8'de")).toBe('2026-10-21T20:00');
+    expect(p("perşembe 9.30'da")).toBe('2026-10-22T09:30');
+    expect(p("perşembe 14:00'te")).toBe('2026-10-22T14:00');
+    // Ay adından sonra gelen sayı gündür, saat değildir.
+    expect(p("24 Ekim'de")).toBe('2026-10-24T23:59');
+    expect(p("cuma, ayın 23'ünde")).toBe('2026-10-23T23:59');
+  });
+
   it('açık tarihler', () => {
     expect(p('24 Ekim')).toBe('2026-10-24T23:59');
     expect(p('Son başvuru: 24 Ekim 2026')).toBe('2026-10-24T23:59');
