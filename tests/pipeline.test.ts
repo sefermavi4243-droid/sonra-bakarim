@@ -52,7 +52,7 @@ describe('link', () => {
     const card = env.notifier.last();
     expect(card.type).toBe('buttons');
     if (card.type !== 'buttons') return;
-    expect(card.text).toContain('Kaydettim: *Veri Analisti Stajyeri*');
+    expect(card.text).toContain('Rafa koydum: *Veri Analisti Stajyeri*');
     expect(card.text).toContain('Son tarih: 24 Ekim Cumartesi 23:59');
     expect(card.text).toContain('Gerekenler: CV, Motivasyon yazısı');
     expect(card.text).toContain('Süre: yaklaşık 45 dakika');
@@ -73,7 +73,7 @@ describe('link', () => {
     await receive(env, text('https://linkedin.com/jobs/view/123456'));
     expect(env.store.items).toHaveLength(1);
     expect(env.llm.calls).toHaveLength(1);
-    expect(env.notifier.lastText()).toContain('zaten kaydetmiştin');
+    expect(env.notifier.lastText()).toContain('zaten rafta');
   });
 
   it('giriş isteyen ya da metni kısa sayfa için ekran görüntüsü istenir', async () => {

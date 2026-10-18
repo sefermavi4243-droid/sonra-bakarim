@@ -48,6 +48,13 @@ export function applyDefaults({ category, deadline, eventAt, now, prefs }: Defau
     case 'application':
     case 'task':
       return { ...none, ask: true };
+    case 'goal':
+      // Hedefin günü yoksa bu haftanın sonu (pazar gün sonu).
+      return {
+        ...none,
+        deadline: at(today.startOf('day').plus({ days: 7 - today.weekday }), 23, 59).toJSDate(),
+        reason: 'Haftalık hedef; pazar akşamına kadar.',
+      };
     case 'tool':
     case 'read':
     case 'other':

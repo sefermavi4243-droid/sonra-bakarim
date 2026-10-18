@@ -178,7 +178,7 @@ describe('tarayıcıdan kayıt ve birleşme', () => {
     expect(env.store.items[0]).toMatchObject({ sourceType: 'extension', sourceUrl: 'https://linkedin.com/jobs/view/123' });
     const card = env.notifier.last();
     expect(card.type === 'buttons' && card.to).toBe('tg:42');
-    expect(card.type === 'buttons' && card.text).toContain('Tarayıcıdan kaydettim: *Veri Analisti Stajyeri*');
+    expect(card.type === 'buttons' && card.text).toContain('Tarayıcıdan rafa koydum: *Veri Analisti Stajyeri*');
     expect(card.type === 'buttons' && card.buttons.map((b) => b.title)).toContain('Takvime ekle');
   });
 
@@ -196,7 +196,7 @@ describe('tarayıcıdan kayıt ve birleşme', () => {
 
     await route(env.deps, (await env.store.getUser(user.id))!, { kind: 'text', text: 'https://linkedin.com/jobs/view/123' });
     expect(env.store.items).toHaveLength(1);
-    expect(env.notifier.lastText()).toContain('Bunu zaten kaydetmiştin');
+    expect(env.notifier.lastText()).toContain('Bu zaten rafta');
 
     const lookup = (await (await api.request(`/api/lookup?url=${encodeURIComponent('https://linkedin.com/jobs/view/123?trk=1')}`, { headers: auth(token) })).json()) as {
       item: { title: string } | null;
@@ -247,7 +247,7 @@ describe('yeni komutlar', () => {
     await route(env.deps, user, { kind: 'text', text: 'takvim' });
     const [text, file] = env.notifier.sent.slice(-2);
     expect(text!.type === 'text' && text!.text).toMatch(/http:\/\/localhost:3000\/takvim\/.+\.ics/);
-    expect(file!.type === 'file' && file!.file.name).toBe('sonra-bakarim.ics');
+    expect(file!.type === 'file' && file!.file.name).toBe('rafta.ics');
   });
 
   it('Takvime ekle düğmesi tek kaydı dosya olarak gönderir', async () => {

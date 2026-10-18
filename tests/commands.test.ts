@@ -38,7 +38,7 @@ describe('listem / bugün / yardım', () => {
     await seedItems(env, user.id);
     await say(env, user.id, 'listem');
     expect(env.notifier.lastText()).toBe(
-      ['Açık kayıtların:', '1. Bir — 20 Eki Sal 18:00', '2. İki — 21 Eki Çar 09:00', '3. Üç — 25 Eki Paz 12:00', '4. Tarihsiz'].join('\n'),
+      ['Raftakiler:', '1. Bir — 20 Eki Sal 18:00', '2. İki — 21 Eki Çar 09:00', '3. Üç — 25 Eki Paz 12:00', '4. Tarihsiz'].join('\n'),
     );
   });
 

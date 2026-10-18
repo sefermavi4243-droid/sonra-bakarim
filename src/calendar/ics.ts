@@ -8,7 +8,7 @@ import type { Item } from '../db/schema.js';
  * - Etkinlik, başlangıcından itibaren 1 saat (ya da tahmini süre kadar).
  */
 
-const PRODID = '-//Sonra Bakarim//TR';
+const PRODID = '-//Rafta//TR';
 const DEADLINE_BLOCK_MINUTES = 30;
 const DEFAULT_EVENT_MINUTES = 60;
 
@@ -103,7 +103,7 @@ export function itemEvents(item: Item, zone: string, now: Date): string[][] {
   return events;
 }
 
-export function buildCalendar(items: Item[], zone: string, now: Date, name = 'Sonra Bakarım'): string {
+export function buildCalendar(items: Item[], zone: string, now: Date, name = 'Rafta'): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',

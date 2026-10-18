@@ -1,4 +1,4 @@
-// Sonra Bakarım web paneli: ajanda, ay takvimi, arşiv, ayarlar ve kayıt detayı.
+// Rafta web paneli: ajanda, ay takvimi, arşiv, ayarlar ve kayıt detayı.
 // Derleme adımı yok; tarayıcıda doğrudan çalışır.
 
 const $ = (sel) => document.querySelector(sel);
@@ -33,7 +33,7 @@ async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
-    headers: { 'x-sonra-bakarim': '1', ...(body ? { 'content-type': 'application/json' } : {}) },
+    headers: { 'x-rafta': '1', ...(body ? { 'content-type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => null);
@@ -416,7 +416,7 @@ async function renderSettings() {
           },
           'Kopyala',
         ),
-        h('a', { class: 'btn', href: '/api/calendar.ics', download: 'sonra-bakarim.ics' }, '.ics indir'),
+        h('a', { class: 'btn', href: '/api/calendar.ics', download: 'rafta.ics' }, '.ics indir'),
       ),
       h('p', { class: 'muted' }, 'Google Takvim ve telefon için bu adresin internetten erişilebilir olması gerekir (bkz. README: Tünel).'),
     ),

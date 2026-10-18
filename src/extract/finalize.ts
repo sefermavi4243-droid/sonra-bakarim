@@ -115,7 +115,7 @@ export function finalizeExtraction(x: Extraction, inputText: string, now: Date, 
   let dlSource = x.deadline_source;
   // Kısa kişisel notta ("Cuma Ali'ye dosyayı at") küçük modeller göreli tarihi atlayabiliyor.
   // Tarihi model değil kural tabanlı çözücü metnin kendisinden okur; uydurma olmaz.
-  if (!dl.date && !dl.question && !x.deadline && x.category === 'task' && inputText.trim().length <= TASK_FALLBACK_MAX) {
+  if (!dl.date && !dl.question && !x.deadline && (x.category === 'task' || x.category === 'goal') && inputText.trim().length <= TASK_FALLBACK_MAX) {
     const parsed = parseTurkishDate(inputText, now, zone);
     if (parsed.kind === 'ambiguous') dl = { date: null, question: parsed.question };
     else if (parsed.kind === 'ok' && parsed.date > now) {

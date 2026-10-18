@@ -1,6 +1,6 @@
 import type { DateTime } from 'luxon';
 import type { Item, User } from '../db/schema.js';
-import { effortText } from '../notify/messages.js';
+import { carryOverButtons, carryOverQuestion, effortText } from '../notify/messages.js';
 import { isQuiet, local } from '../rules/time.js';
 import { type AppDeps, prefsOf, windowOpen } from './deps.js';
 
@@ -11,6 +11,8 @@ export const BRIEF_HOUR = 8;
 export const BRIEF_MINUTE = 30;
 /** Aynı güne bu kadar son tarih düşerse "yoğun gün" sayılır. */
 export const BUSY_DAY_THRESHOLD = 2;
+/** Pazartesi hafta planı bu saatten sonra gider. */
+export const WEEK_PLAN_HOUR = 9;
 
 const DAY_NAMES = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
@@ -35,24 +37,50 @@ export interface WeeklyStats {
   closed: number;
 }
 
+/** Bu haftanın hedefleri: tamamlanan sayısı ve hâlâ açık olanlar. */
+export interface GoalStats {
+  done: number;
+  open: Item[];
+}
+
+/** Haftalık hedefin bitişi bu hafta içinde mi (pazartesi–pazar)? */
+export function isThisWeeksGoal(item: Item, now: Date, zone: string): boolean {
+  if (item.category !== 'goal' || !item.deadlineAt) return false;
+  const start = local(now, zone).startOf('week'); // luxon: hafta pazartesi başlar
+  const end = start.plus({ weeks: 1 });
+  return item.deadlineAt >= start.toJSDate() && item.deadlineAt < end.toJSDate();
+}
+
 /**
  * Haftalık özet: önümüzdeki 7 günün işleri gün gün, yoğun günler için öneri,
  * geçen haftanın sayıları. Göndermeye değecek bir şey yoksa null.
  */
-export function weeklyDigest(open: Item[], stats: WeeklyStats, now: Date, zone: string): string | null {
+export function weeklyDigest(
+  open: Item[],
+  stats: WeeklyStats,
+  now: Date,
+  zone: string,
+  goals: GoalStats = { done: 0, open: [] },
+): string | null {
   const start = local(now, zone).startOf('day');
   const end = start.plus({ days: 8 }); // bugün dahil önümüzdeki 7 gün
   const upcoming = open
     .filter((i) => {
+      if (i.category === 'goal') return false; // hedefler kendi bölümünde
       const at = dueAt(i);
       return at !== null && at >= now && at < end.toJSDate();
     })
     .sort((a, b) => +dueAt(a)! - +dueAt(b)!);
   const undated = open.filter((i) => dueAt(i) === null).length;
-  if (upcoming.length === 0 && undated === 0 && stats.added === 0) return null;
+  const goalTotal = goals.done + goals.open.length;
+  if (upcoming.length === 0 && undated === 0 && stats.added === 0 && goalTotal === 0) return null;
 
   const lines = ['*Haftalık özet*'];
   if (stats.added || stats.closed) lines.push(`Bu hafta ${stats.added} kayıt ekledin, ${stats.closed} tanesini kapattın.`);
+  if (goalTotal) {
+    lines.push('', `Bu haftanın hedefleri: ${goals.done}/${goalTotal} tamam.`);
+    if (goals.open.length) lines.push(...goals.open.map((g) => `• ${g.title} (bitmedi)`));
+  }
 
   if (upcoming.length) {
     lines.push('', 'Önümüzdeki 7 gün:');
@@ -106,10 +134,24 @@ export function morningBrief(open: Item[], now: Date, zone: string): string | nu
   return ['Günaydın. Bugün:', ...todays.map((i) => line(i, zone))].join('\n');
 }
 
+/** Pazartesi sabahı hafta planı: bu haftanın hedefleri. Hedef yoksa null. */
+export function weekPlan(goals: Item[], zone: string): string | null {
+  if (goals.length === 0) return null;
+  return [
+    `Yeni hafta. Rafında ${goals.length} haftalık hedef var:`,
+    ...goals.map((g) => `• ${g.title}`),
+    'Çarşamba akşamı nasıl gittiğini sorarım.',
+  ].join('\n');
+}
+
 const WEEK_MS = 7 * 24 * 3600_000;
 
 /** Kullanıcının haftalık özetini (hemen) hazırlar; `özet` komutu ve zamanlayıcı kullanır. */
 export async function buildUserDigest(deps: AppDeps, user: User): Promise<string | null> {
+  return (await collectDigest(deps, user)).text;
+}
+
+async function collectDigest(deps: AppDeps, user: User): Promise<{ text: string | null; unfinishedGoals: Item[] }> {
   const now = deps.now();
   const all = await deps.store.listItems(user.id, ['open', 'snoozed', 'done', 'dropped', 'expired'], 1000);
   const weekAgo = +now - WEEK_MS;
@@ -118,8 +160,16 @@ export async function buildUserDigest(deps: AppDeps, user: User): Promise<string
     closed: all.filter((i) => i.closedAt && +i.closedAt >= weekAgo && (i.status === 'done' || i.status === 'dropped')).length,
   };
   const open = all.filter((i) => i.status === 'open' || i.status === 'snoozed');
-  return weeklyDigest(open, stats, now, user.timezone);
+  const weekGoals = all.filter((i) => isThisWeeksGoal(i, now, user.timezone));
+  const goals = {
+    done: weekGoals.filter((g) => g.status === 'done').length,
+    open: weekGoals.filter((g) => g.status === 'open' || g.status === 'snoozed'),
+  };
+  return { text: weeklyDigest(open, stats, now, user.timezone, goals), unfinishedGoals: goals.open };
 }
+
+/** Bitmeyen hedef için "gelecek haftaya taşı / bırak" sorusu (en fazla 3 hedef). */
+export const MAX_CARRY_PROMPTS = 3;
 
 /**
  * Zamanlayıcının her turunda çağrılır: vakti gelen kullanıcılara haftalık özeti ve
@@ -145,8 +195,26 @@ export async function runDigests(deps: AppDeps): Promise<void> {
       (!user.lastDigestAt || user.lastDigestAt < todayStart)
     ) {
       await deps.store.updateUser(user.id, { lastDigestAt: now });
-      const text = await buildUserDigest(deps, user);
-      if (text) await deps.notifier.sendText(user.address, text).catch((err) => deps.log('özet gönderilemedi', { err: String(err) }));
+      const { text, unfinishedGoals } = await collectDigest(deps, user);
+      try {
+        if (text) await deps.notifier.sendText(user.address, text);
+        for (const goal of unfinishedGoals.slice(0, MAX_CARRY_PROMPTS)) {
+          await deps.notifier.sendButtons(user.address, carryOverQuestion(goal), carryOverButtons(goal.id));
+        }
+      } catch (err) {
+        deps.log('özet gönderilemedi', { err: String(err) });
+      }
+    }
+
+    // Pazartesi sabahı hafta planı (yalnızca hedef varsa).
+    if (canText && t.weekday === 1 && t.hour >= WEEK_PLAN_HOUR && t.hour < 12 && (!user.lastWeekPlanAt || user.lastWeekPlanAt < todayStart)) {
+      await deps.store.updateUser(user.id, { lastWeekPlanAt: now });
+      const open = await deps.store.listItems(user.id, ['open', 'snoozed'], 500);
+      const text = weekPlan(
+        open.filter((i) => isThisWeeksGoal(i, now, zone)),
+        zone,
+      );
+      if (text) await deps.notifier.sendText(user.address, text).catch((err) => deps.log('hafta planı gönderilemedi', { err: String(err) }));
     }
 
     if (

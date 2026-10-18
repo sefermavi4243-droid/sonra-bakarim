@@ -1,7 +1,7 @@
 import type { User } from '../db/schema.js';
-import { TEXT, dateUpdated, prepMessage, checklist, snoozeButtons, snoozed, devicesMessage } from '../notify/messages.js';
+import { TEXT, dateUpdated, prepMessage, checklist, snoozeButtons, snoozed, devicesMessage, goalMoved } from '../notify/messages.js';
 import type { SnoozeOption } from '../rules/schedule.js';
-import { finishItem, isClosed, setDeadlineFromText, snoozeItem, snoozeOptions } from './actions.js';
+import { finishItem, isClosed, moveToNextWeek, setDeadlineFromText, snoozeItem, snoozeOptions } from './actions.js';
 import { sendItemCalendar } from './calendar.js';
 import { deleteAllData } from './commands.js';
 import type { AppDeps } from './deps.js';
@@ -59,6 +59,15 @@ export async function handleButton(deps: AppDeps, user: User, payload: string): 
     case 'cal':
       await sendItemCalendar(deps, user, item);
       return;
+    case 'goalnext': {
+      if (closed) {
+        await notifier.sendText(to, TEXT.itemClosed);
+        return;
+      }
+      const moved = await moveToNextWeek(deps, user, item);
+      if (moved.kind === 'ok') await notifier.sendText(to, goalMoved(moved.item, user.timezone));
+      return;
+    }
     case 'done':
     case 'drop':
       if (closed) {

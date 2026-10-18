@@ -3,7 +3,7 @@ import { z } from 'zod';
 /** SPEC bölüm 9'daki çıkarım şeması (+ `event_evidence`, `source_text`). */
 export const extractionSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  category: z.enum(['job', 'event', 'application', 'tool', 'read', 'task', 'other']),
+  category: z.enum(['job', 'event', 'application', 'tool', 'read', 'task', 'goal', 'other']),
   organization: z.string().trim().min(1).nullable(),
   deadline: z.string().trim().min(1).nullable(),
   deadline_source: z.enum(['explicit', 'inferred']).nullable(),
@@ -35,7 +35,7 @@ export const extractJsonSchema = {
   required: Object.keys(extractionSchema.shape),
   properties: {
     title: { ...str, description: 'Kısa, Türkçe başlık. Ör: "Veri Analisti Stajyeri"' },
-    category: { type: 'string', enum: ['job', 'event', 'application', 'tool', 'read', 'task', 'other'] },
+    category: { type: 'string', enum: ['job', 'event', 'application', 'tool', 'read', 'task', 'goal', 'other'] },
     organization: { ...nullableStr, description: 'Şirket, kurum ya da düzenleyen. Yoksa null.' },
     deadline: {
       ...nullableStr,

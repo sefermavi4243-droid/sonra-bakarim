@@ -35,6 +35,6 @@ export async function sendFullCalendar(deps: AppDeps, user: User): Promise<void>
   const dated = items.filter((i) => i.deadlineAt || i.eventAt);
   if (dated.length && deps.notifier.sendFile) {
     const ics = buildCalendar(dated, user.timezone, deps.now());
-    await deps.notifier.sendFile(user.address, { name: 'sonra-bakarim.ics', mimeType: 'text/calendar', data: Buffer.from(ics, 'utf8') });
+    await deps.notifier.sendFile(user.address, { name: 'rafta.ics', mimeType: 'text/calendar', data: Buffer.from(ics, 'utf8') });
   }
 }

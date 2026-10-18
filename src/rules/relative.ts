@@ -166,6 +166,19 @@ function findDay(t: string, now: DateTime): DayResult {
     return { kind: 'day', day: today.plus({ days: diff }) };
   }
 
+  // Hafta ifadeleri (gün adı yoksa): haftalık hedefler için.
+  const sunday = weekStart(today).plus({ days: 6 });
+  if (new RegExp(`${W}(gelecek|önümüzdeki|onumuzdeki) hafta(?![\\p{L}]| ?sonu| ?içi| ?ici)`, 'u').test(t)) {
+    return { kind: 'day', day: sunday.plus({ weeks: 1 }) };
+  }
+  if (new RegExp(`${W}hafta ?i[çc]i(?!n)`, 'u').test(t)) {
+    const friday = weekStart(today).plus({ days: 4 });
+    return { kind: 'day', day: friday >= today ? friday : friday.plus({ weeks: 1 }) };
+  }
+  if (new RegExp(`${W}(bu hafta(?![\\p{L}])|bu hafta i[çc]inde|hafta ?sonu(na|ndan)? ?(kadar)?|bu haftanın sonu)`, 'u').test(t)) {
+    return { kind: 'day', day: sunday };
+  }
+
   if (new RegExp(`${W}haftaya(?![\\p{L}])`, 'u').test(t)) return { kind: 'day', day: today.plus({ weeks: 1 }) };
 
   return null;
@@ -217,6 +230,7 @@ export function hasDateCue(text: string): boolean {
     'yarın',
     'yarin',
     'haftaya',
+    'hafta',
     'öbür',
     'obur',
     'ertesi',

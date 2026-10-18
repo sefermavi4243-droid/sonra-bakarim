@@ -8,7 +8,7 @@ import { extractJsonSchema } from './schema.js';
  */
 export function buildSystemPrompt(now: Date, zone: string): string {
   const nowIso = local(now, zone).toISO({ suppressMilliseconds: true });
-  return `Sen "Sonra Bakarım" servisinin kayıt çıkarıcısısın. Kullanıcılar WhatsApp'tan "sonra bakarım" dedikleri şeyleri gönderir: iş ilanı linki, etkinlik afişi, ekran görüntüsü, burs yönergesi PDF'i, sesli not dökümü, iletilen grup mesajı. Görevin bu içerikten bir kayıt çıkarmak ve yalnızca aşağıdaki alanları içeren tek bir JSON nesnesi döndürmek. JSON dışında metin yazma.
+  return `Sen "Rafta" servisinin kayıt çıkarıcısısın. Kullanıcılar Telegram, WhatsApp ya da tarayıcıdan "sonra bakarım" dedikleri şeyleri gönderir: iş ilanı linki, etkinlik afişi, ekran görüntüsü, burs yönergesi PDF'i, sesli not dökümü, iletilen grup mesajı. Görevin bu içerikten bir kayıt çıkarmak ve yalnızca aşağıdaki alanları içeren tek bir JSON nesnesi döndürmek. JSON dışında metin yazma.
 
 Şu an: ${nowIso} (${formatDateTime(now, zone)}), saat dilimi ${zone}. Göreli ifadeleri ("cuma", "yarın", "haftaya salı") bu ana göre çöz.
 
@@ -17,7 +17,7 @@ Kurallar:
 2. "deadline_evidence", girdide tarihin geçtiği ifadeyi harfi harfine, değiştirmeden içermeli (ör. "Son başvuru: 24 Ekim 2026"). Bu ifade metinde aynen aranır; bulunamazsa tarih silinir. Aynı kural "event_evidence" için de geçerli.
 3. Yalnızca gün verilmişse saati 23:59 al.
 4. Bir ifade birden fazla tarihe karşılık gelebiliyorsa (ör. bugünün gün adı, "ayın 5'i" ama hangi ay belli değil) tarihi null bırak ve "question_for_user" alanına tek, kısa, Türkçe bir soru yaz.
-5. Kategori: job (iş/staj ilanı), event (etkinlik, konferans, kariyer günü), application (burs, Erasmus, yarışma, program başvurusu), tool (denenecek araç/uygulama/kurs), read (okunacak/izlenecek içerik), task (kişisel yapılacak iş, ör. "Cuma Ali'ye dosyayı at"), other.
+5. Kategori: job (iş/staj ilanı), event (etkinlik, konferans, kariyer günü), application (burs, Erasmus, yarışma, program başvurusu), tool (denenecek araç/uygulama/kurs), read (okunacak/izlenecek içerik), task (kişisel yapılacak iş, ör. "Cuma Ali'ye dosyayı at"), goal (kullanıcının bu hafta ya da gelecek hafta gerçekleştirmek istediği kendi hedefi; ör. "bu hafta Medium yazımı yayınlayacağım", "bu hafta portfolyo projesini bitireceğim", "hafta sonuna kadar LinkedIn gönderisini paylaşacağım"), other. Hedeflerde başlık eylemle yazılır (ör. "Medium yazısını yayınla"); "bu hafta" gibi ifadeler deadline_evidence olarak aynen alınır.
 6. "off_topic" yalnızca içerik kaydedilecek bir şey değilse true olur: selamlaşma, genel bilgi sorusu ("Bugün hava nasıl?"), sohbet, sana yöneltilmiş istekler. Kişisel bir hatırlatma isteği ("şunu yapmayı unutma") konu dışı değildir, task'tır.
 7. Başlık, gerekenler, notlar ve sonraki adım Türkçe ve kısa olsun. "effort_minutes" işin gerçekçi süresi (ör. bir staj başvurusu 45, bir makale okumak 15).
 8. Görsel ya da taranmış PDF geldiyse "source_text" alanına görseldeki başlık ve tarih satırlarını harfi harfine yaz; kanıt ifadeleri bu döküm içinde aranır. Metin girdisinde "source_text" null olur.

@@ -35,7 +35,7 @@ export interface NewInbound {
 export type UserPatch = Partial<
   Pick<
     User,
-    'displayName' | 'pendingAction' | 'lastInboundAt' | 'calendarToken' | 'weeklyDigest' | 'morningBrief' | 'lastDigestAt' | 'lastBriefAt'
+    'displayName' | 'pendingAction' | 'lastInboundAt' | 'calendarToken' | 'weeklyDigest' | 'morningBrief' | 'lastDigestAt' | 'lastBriefAt' | 'lastWeekPlanAt'
   >
 >;
 export type ItemPatch = Partial<

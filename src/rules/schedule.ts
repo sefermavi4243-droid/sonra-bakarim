@@ -12,6 +12,8 @@ export interface PlanInput {
   eventAt: Date | null;
   /** Tarihsiz kayıtlar için "hâlâ istiyor musun?" zamanı. */
   checkInAt?: Date | null;
+  /** Haftalık hedef: hafta ortası, cuma ve son gün ritmi. */
+  goal?: boolean;
   now: Date;
   prefs: UserPrefs;
 }
@@ -26,11 +28,18 @@ interface Candidate extends PlannedReminder {
 }
 
 /** SPEC bölüm 10: bir kaydın hatırlatma zamanları. */
-export function planReminders({ deadline, effortMinutes, eventAt, checkInAt, now, prefs }: PlanInput): PlannedReminder[] {
+export function planReminders({ deadline, effortMinutes, eventAt, checkInAt, goal, now, prefs }: PlanInput): PlannedReminder[] {
   const zone = prefs.timezone;
   const candidates: Candidate[] = [];
 
-  if (deadline) {
+  if (deadline && goal) {
+    // Hedef ritmi: çarşamba 19:00 ara kontrol, cuma 18:00 dürtme, son gün 11:00.
+    const D = local(deadline, zone);
+    const monday = D.startOf('day').minus({ days: D.weekday - 1 });
+    candidates.push({ kind: 'plan', sendAt: at(monday.plus({ days: 2 }), 19).toJSDate(), limit: deadline });
+    candidates.push({ kind: 'nudge', sendAt: at(monday.plus({ days: 4 }), 18).toJSDate(), limit: deadline });
+    if (D.hour >= 12) candidates.push({ kind: 'last_call', sendAt: at(D, 11).toJSDate(), limit: deadline });
+  } else if (deadline) {
     const D = local(deadline, zone);
     const E = effortMinutes ?? 0;
     // Kural 1

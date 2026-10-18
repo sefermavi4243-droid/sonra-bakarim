@@ -34,6 +34,7 @@ export class MemoryStore implements Store {
         morningBrief: false,
         lastDigestAt: null,
         lastBriefAt: null,
+        lastWeekPlanAt: null,
       };
       this.users.push(u);
     } else {

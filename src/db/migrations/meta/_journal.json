@@ -15,6 +15,20 @@
       "when": 1792322303039,
       "tag": "0001_devices_and_digest",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792326006269,
+      "tag": "0002_goal_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792326102338,
+      "tag": "0003_week_plan",
+      "breakpoints": true
     }
   ]
 }

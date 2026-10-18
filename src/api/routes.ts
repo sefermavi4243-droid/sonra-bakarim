@@ -5,7 +5,17 @@ import { z } from 'zod';
 import { buildCalendar, icsFileName } from '../calendar/ics.js';
 import type { Device, Item, User } from '../db/schema.js';
 import { canonicalUrl } from '../ingest/link.js';
-import { finishItem, isClosed, reopenItem, setDeadline, setDeadlineFromText, snoozeItem, snoozeOptions, type DateChange } from '../jobs/actions.js';
+import {
+  finishItem,
+  isClosed,
+  moveToNextWeek,
+  reopenItem,
+  setDeadline,
+  setDeadlineFromText,
+  snoozeItem,
+  snoozeOptions,
+  type DateChange,
+} from '../jobs/actions.js';
 import { calendarUrl } from '../jobs/calendar.js';
 import { captureSchema, linkDedupeHash } from '../jobs/capture.js';
 import type { AppDeps } from '../jobs/deps.js';
@@ -16,7 +26,7 @@ import { SNOOZE_LABELS, type SnoozeOption } from '../rules/schedule.js';
 
 export const SESSION_COOKIE = 'sb_oturum';
 /** Çerezle gelen değiştirici isteklerde aranan başlık; başka siteden gönderilemez (CSRF). */
-export const PANEL_HEADER = 'x-sonra-bakarim';
+export const PANEL_HEADER = 'x-rafta';
 
 export interface ApiDeps {
   app: AppDeps;
@@ -240,6 +250,13 @@ export function createApi(deps: ApiDeps): Hono<Env> {
     return dateChangeResponse(c, result, snooze);
   });
 
+  api.post('/api/items/:id/next-week', async (c) => {
+    const item = await ownItem(c);
+    if (!item) return c.json({ error: 'not_found' }, 404);
+    const result = await moveToNextWeek(d, c.var.user, item);
+    return dateChangeResponse(c, result, result.kind === 'ok' ? snoozeOptions(d, c.var.user, result.item) : []);
+  });
+
   api.patch('/api/items/:id', async (c) => {
     const item = await ownItem(c);
     if (!item) return c.json({ error: 'not_found' }, 404);
@@ -262,7 +279,7 @@ export function createApi(deps: ApiDeps): Hono<Env> {
     const items = await d.store.listItems(c.var.user.id, ['open', 'snoozed'], 500);
     return c.body(buildCalendar(items, c.var.user.timezone, d.now()), 200, {
       'content-type': 'text/calendar; charset=utf-8',
-      'content-disposition': 'attachment; filename="sonra-bakarim.ics"',
+      'content-disposition': 'attachment; filename="rafta.ics"',
     });
   });
 

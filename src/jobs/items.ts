@@ -21,6 +21,7 @@ export async function replan(store: Store, item: Item, user: User, now: Date, ch
     effortMinutes: item.effortMinutes,
     eventAt: item.eventAt,
     checkInAt,
+    goal: item.category === 'goal',
     now,
     prefs: prefsOf(user),
   });

@@ -1,6 +1,7 @@
 import type { Item, User } from '../db/schema.js';
 import { type DateParse, parseTurkishDate } from '../rules/relative.js';
 import { type SnoozeOption, availableSnoozes, snoozeTime } from '../rules/schedule.js';
+import { at, local } from '../rules/time.js';
 import { type AppDeps, prefsOf } from './deps.js';
 import { closeItem, replan } from './items.js';
 
@@ -65,6 +66,13 @@ export async function setDeadline(deps: AppDeps, user: User, item: Item, date: D
   const count = await replan(deps.store, updated!, user, now);
   await deps.store.insertInteraction(user.id, item.id, 'date_set', now);
   return { kind: 'ok', item: updated!, reminders: count };
+}
+
+/** Bitmeyen haftalık hedefi gelecek haftanın sonuna (pazar gün sonu) taşır. */
+export async function moveToNextWeek(deps: AppDeps, user: User, item: Item): Promise<DateChange> {
+  const now = local(deps.now(), user.timezone);
+  const nextSunday = now.startOf('day').plus({ days: 7 - now.weekday + 7 });
+  return setDeadline(deps, user, item, at(nextSunday, 23, 59).toJSDate(), 'Gelecek haftaya taşındı');
 }
 
 /** Serbest metinli tarih ("perşembe 18:00") aynı Türkçe çözücüden geçer. */

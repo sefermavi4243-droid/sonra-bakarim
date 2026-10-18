@@ -29,6 +29,8 @@ export const categoryEnum = pgEnum('category', [
   'read',
   'task',
   'other',
+  // Haftalık hedef: "bu hafta Medium yazımı yayınlayacağım" (SPEC'e ek).
+  'goal',
 ]);
 export const deadlineSourceEnum = pgEnum('deadline_source', ['explicit', 'inferred', 'default', 'user']);
 export const itemStatusEnum = pgEnum('item_status', ['open', 'snoozed', 'done', 'dropped', 'expired']);
@@ -79,6 +81,7 @@ export const users = pgTable('users', {
   morningBrief: boolean('morning_brief').notNull().default(false),
   lastDigestAt: tz('last_digest_at'),
   lastBriefAt: tz('last_brief_at'),
+  lastWeekPlanAt: tz('last_week_plan_at'),
 });
 
 /** Bağlı cihaz (tarayıcı uzantısı, web paneli). Anahtarın yalnızca SHA-256 özeti tutulur. */

@@ -6,17 +6,17 @@ import type { Button, TemplateMessage } from './notifier.js';
 // Kullanıcıya giden tüm metinler burada; hepsi Türkçe (CLAUDE.md kural 8).
 
 export const TEXT = {
-  offTopic: 'Ben sadece kaydettiklerinle ilgilenirim. Bir link, ekran görüntüsü ya da sesli not at.',
+  offTopic: 'Ben yalnızca rafa kaldırdıklarınla ilgilenirim. Bir link, ekran görüntüsü, sesli not ya da bu haftaki bir hedefini at.',
   unreadable: 'Bunu okuyamadım, ekran görüntüsü atar mısın?',
   linkNeedsScreenshot:
     'Bu sayfayı açamadım ya da içinde yeterli metin yok (giriş isteyen sayfalar böyle olur). Ekran görüntüsünü atar mısın?',
   unsupportedMedia: 'Şimdilik link, ekran görüntüsü, PDF, sesli not ve yazılı mesaj okuyabiliyorum.',
   help: [
-    'Bana sonra bakacağın şeyi at: link, ekran görüntüsü, PDF ya da sesli not. Son tarihini bulup kaydederim.',
+    'Rafta burada. Sonra bakacağın şeyi at: link, ekran görüntüsü, PDF, sesli not ya da "bu hafta şunu yapacağım". Son tarihini bulup rafa koyarım.',
     'Zamanı gelince hatırlatırım; Yaptım, Ertele ya da Vazgeç ile kapatırsın.',
     'Komutlar: listem, bugün, takvim, özet, bağla, cihazlarım, verilerimi sil.',
   ].join('\n'),
-  emptyList: 'Açık kaydın yok. Bir link ya da ekran görüntüsü atarak başlayabilirsin.',
+  emptyList: 'Rafın boş. Bir link ya da ekran görüntüsü atarak başlayabilirsin.',
   nothingToday: 'Bugün ve yarın son tarihi olan bir kaydın yok.',
   deleteConfirm:
     'Tüm kayıtların, hatırlatmaların ve gönderdiğin dosyalar kalıcı olarak silinecek. Emin misin?',
@@ -28,8 +28,8 @@ export const TEXT = {
   confirmed: 'Tamam, zamanı gelince hatırlatırım.',
   itemGone: 'Bu kayıt artık yok.',
   itemClosed: 'Bu kayıt zaten kapalı.',
-  done: 'Harika, kapattım.',
-  dropped: 'Tamam, bıraktım. Hatırlatma gelmeyecek.',
+  done: 'Raftan indirdim. Kolay gelsin.',
+  dropped: 'Tamam, rafı boşalttım. Hatırlatma gelmeyecek.',
   started: 'Kolay gelsin. Son tarihe göre hatırlatmaya devam edeceğim.',
   going: 'Not ettim. Etkinlikten önce yine hatırlatırım.',
   cannotSnooze: 'Son tarihe çok az kaldı, daha fazla erteleyemiyorum.',
@@ -56,6 +56,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   tool: 'Denenecek araç',
   read: 'Okunacak',
   task: 'Yapılacak',
+  goal: 'Haftalık hedef',
   other: 'Diğer',
 };
 
@@ -89,7 +90,7 @@ export function buildCard({ item, zone, defaultReason, question, deadlinePassed,
 } {
   const lines: string[] = [];
   const org = item.organization ? `, ${item.organization}` : '';
-  lines.push(`${fromBrowser ? 'Tarayıcıdan kaydettim' : 'Kaydettim'}: *${item.title}*${org}`);
+  lines.push(`${fromBrowser ? 'Tarayıcıdan rafa koydum' : 'Rafa koydum'}: *${item.title}*${org}`);
   lines.push(`Tür: ${CATEGORY_LABEL[item.category]}`);
   if (item.eventAt) {
     lines.push(`Etkinlik: ${formatDateTime(item.eventAt, zone)}${item.location ? `, ${item.location}` : ''}`);
@@ -119,6 +120,21 @@ export function buildCard({ item, zone, defaultReason, question, deadlinePassed,
       ...(calendarButton && (item.deadlineAt || item.eventAt) ? [{ id: buttonId('cal', item.id), title: 'Takvime ekle' }] : []),
     ],
   };
+}
+
+export function carryOverQuestion(goal: Item): string {
+  return `*${goal.title}* bu hafta bitmedi. Gelecek haftaya taşıyayım mı?`;
+}
+
+export function carryOverButtons(goalId: string): Button[] {
+  return [
+    { id: buttonId('goalnext', goalId), title: 'Haftaya taşı' },
+    { id: buttonId('drop', goalId), title: 'Bırak' },
+  ];
+}
+
+export function goalMoved(goal: Item, zone: string): string {
+  return `Tamam, *${goal.title}* gelecek haftaya taşındı (${formatDateTime(goal.deadlineAt!, zone)}).`;
 }
 
 export function linkCodeMessage(code: string, minutes: number): string {
@@ -152,7 +168,7 @@ export function calendarMessage(url: string, count: number): string {
 
 export function alreadySaved(item: Item, zone: string): string {
   const when = item.deadlineAt ? ` Son tarih: ${formatDateTime(item.deadlineAt, zone)}.` : '';
-  return `Bunu zaten kaydetmiştin: *${item.title}*.${when}`;
+  return `Bu zaten rafta: *${item.title}*.${when}`;
 }
 
 export function dateUpdated(item: Item, zone: string, count: number): string {
@@ -183,7 +199,7 @@ function listLine(i: number, item: Item, zone: string): string {
 
 export function listMessage(items: Item[], zone: string): string {
   if (items.length === 0) return TEXT.emptyList;
-  return ['Açık kayıtların:', ...items.map((it, i) => listLine(i, it, zone))].join('\n');
+  return ['Raftakiler:', ...items.map((it, i) => listLine(i, it, zone))].join('\n');
 }
 
 export function todayMessage(items: Item[], zone: string): string {
@@ -246,6 +262,24 @@ export function buildReminder(kind: ReminderKind, item: Item, zone: string, now:
   }
 
   const deadline = formatDateTime(item.deadlineAt, zone);
+  if (item.category === 'goal') {
+    const text =
+      kind === 'plan'
+        ? `Hafta ortası: *${item.title}* hedefin ne durumda? ${deadline} tarihine kadar vaktin var.`
+        : kind === 'last_call'
+          ? `Bugün son gün: *${item.title}*. Bitirdiysen "Yaptım"a bas.`
+          : `Hafta bitiyor: *${item.title}* hâlâ açık. Hafta sonu bir saat ayırabilir misin?`;
+    return {
+      text,
+      buttons: [done, snooze, drop],
+      template: {
+        name: 'hatirlatma_son_tarih',
+        language: 'tr',
+        bodyParams: [item.title, deadline, needs],
+        buttonPayloads: [done.id, snooze.id, drop.id],
+      },
+    };
+  }
   if (kind === 'plan') {
     const effort = effortText(item.effortMinutes ?? 30);
     const start = { id: buttonId('start', item.id), title: 'Başladım' };
