@@ -6,7 +6,7 @@ import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
-import { devices, inboundMessages, interactions, items, linkCodes, preps, reminders, users } from './schema.js';
+import { blocks, devices, inboundMessages, interactions, items, linkCodes, preps, reminders, users } from './schema.js';
 import { OPEN_STATUSES, type Store } from './store.js';
 
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -224,6 +224,7 @@ export function createDrizzleStore(db: Db): Store {
         await tx.delete(preps).where(inArray(preps.itemId, itemIds));
         await tx.delete(items).where(eq(items.userId, userId));
         await tx.delete(inboundMessages).where(eq(inboundMessages.userId, userId));
+        await tx.delete(blocks).where(eq(blocks.userId, userId));
         await tx.delete(devices).where(eq(devices.userId, userId));
         await tx.delete(linkCodes).where(eq(linkCodes.userId, userId));
         await tx.delete(users).where(eq(users.id, userId));
@@ -274,6 +275,40 @@ export function createDrizzleStore(db: Db): Store {
 
     async listDevices(userId) {
       return db.select().from(devices).where(eq(devices.userId, userId)).orderBy(asc(devices.createdAt));
+    },
+
+    async listScheduledReminders(userId) {
+      return db
+        .select()
+        .from(reminders)
+        .where(and(eq(reminders.userId, userId), eq(reminders.status, 'scheduled')))
+        .orderBy(asc(reminders.sendAt));
+    },
+
+    async listBlocks(userId) {
+      return db.select().from(blocks).where(eq(blocks.userId, userId)).orderBy(asc(blocks.startAt));
+    },
+
+    async createBlock(input) {
+      const [row] = await db.insert(blocks).values(input).returning();
+      return row!;
+    },
+
+    async updateBlock(userId, id, patch) {
+      const [row] = await db
+        .update(blocks)
+        .set(patch)
+        .where(and(eq(blocks.userId, userId), eq(blocks.id, id)))
+        .returning();
+      return row ?? null;
+    },
+
+    async deleteBlock(userId, id) {
+      const rows = await db
+        .delete(blocks)
+        .where(and(eq(blocks.userId, userId), eq(blocks.id, id)))
+        .returning({ id: blocks.id });
+      return rows.length === 1;
     },
 
     async deleteDevice(userId, id) {

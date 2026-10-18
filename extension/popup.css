@@ -1,27 +1,27 @@
 :root {
-  --bg: #ffffff;
-  --surface: #f6f7f8;
-  --text: #16181d;
-  --muted: #667085;
-  --line: #e4e7ec;
-  --accent: #0f766e;
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --text: #1c1a24;
+  --muted: #6d6a7c;
+  --line: #ece9e3;
+  --accent: #5b4fe9;
   --accent-text: #ffffff;
-  --danger: #b42318;
-  --soon: #b54708;
+  --danger: #c4320a;
+  --soon: #f26b1d;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #15171c;
-    --surface: #1e2128;
-    --text: #e8eaed;
-    --muted: #98a2b3;
-    --line: #2c313a;
-    --accent: #2dd4bf;
-    --accent-text: #062c28;
-    --danger: #f97066;
-    --soon: #fdb022;
+    --bg: #121118;
+    --surface: #1a1922;
+    --text: #eeecf6;
+    --muted: #a09db2;
+    --line: #2a2833;
+    --accent: #8e86ff;
+    --accent-text: #14122a;
+    --danger: #ff7a59;
+    --soon: #ff8b4d;
   }
 }
 
@@ -46,7 +46,9 @@ header {
 }
 
 .brand {
-  font-weight: 650;
+  font-weight: 750;
+  font-size: 16px;
+  letter-spacing: -0.03em;
   flex: 1;
 }
 

@@ -3,7 +3,7 @@ import { Hono, type Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { z } from 'zod';
 import { buildCalendar, icsFileName } from '../calendar/ics.js';
-import type { Device, Item, User } from '../db/schema.js';
+import type { Block, Device, Item, User } from '../db/schema.js';
 import { canonicalUrl } from '../ingest/link.js';
 import {
   finishItem,
@@ -22,7 +22,10 @@ import type { AppDeps } from '../jobs/deps.js';
 import { buildUserDigest } from '../jobs/digest.js';
 import { authenticate, ensureCalendarToken, redeemLinkCode } from '../jobs/link.js';
 import { CAPTURE_TYPE } from '../jobs/process.js';
+import { suggestBlocks } from '../rules/blocks.js';
 import { SNOOZE_LABELS, type SnoozeOption } from '../rules/schedule.js';
+import { prefsOf } from '../jobs/deps.js';
+import { createDeviceToken } from '../jobs/link.js';
 
 export const SESSION_COOKIE = 'sb_oturum';
 /** Çerezle gelen değiştirici isteklerde aranan başlık; başka siteden gönderilemez (CSRF). */
@@ -59,6 +62,10 @@ export function itemJson(item: Item, extra: { snoozeOptions?: SnoozeOption[] } =
     closedAt: item.closedAt?.toISOString() ?? null,
     ...(extra.snoozeOptions ? { snoozeOptions: extra.snoozeOptions.map((o) => ({ id: o, label: SNOOZE_LABELS[o] })) } : {}),
   };
+}
+
+export function blockJson(b: Block) {
+  return { id: b.id, itemId: b.itemId, startAt: b.startAt.toISOString(), endAt: b.endAt.toISOString() };
 }
 
 const STATUS_SETS = {
@@ -119,7 +126,7 @@ export function createApi(deps: ApiDeps): Hono<Env> {
       .sendText(result.user.address, `Yeni cihaz bağlandı: ${result.device.name}. Sen değilsen "cihazlarım" yazıp kaldır.`)
       .catch(() => undefined);
     if (body.data.cookie) {
-      setCookie(c, SESSION_COOKIE, result.token, { httpOnly: true, sameSite: 'Strict', path: '/', maxAge: 365 * 24 * 3600 });
+      setCookie(c, SESSION_COOKIE, result.token, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 365 * 24 * 3600 });
       return c.json({ ok: true, name: result.user.displayName });
     }
     return c.json({ token: result.token, name: result.user.displayName });
@@ -131,7 +138,8 @@ export function createApi(deps: ApiDeps): Hono<Env> {
     const user = token.length >= 20 ? await d.store.findUserByCalendarToken(token) : null;
     if (!user) return c.text('Bulunamadı', 404);
     const items = await d.store.listItems(user.id, ['open', 'snoozed'], 500);
-    return c.body(buildCalendar(items, user.timezone, d.now()), 200, {
+    const blocks = await d.store.listBlocks(user.id);
+    return c.body(buildCalendar(items, user.timezone, d.now(), 'Rafta', blocks), 200, {
       'content-type': 'text/calendar; charset=utf-8',
       'cache-control': 'no-store',
     });
@@ -277,10 +285,73 @@ export function createApi(deps: ApiDeps): Hono<Env> {
 
   api.get('/api/calendar.ics', async (c) => {
     const items = await d.store.listItems(c.var.user.id, ['open', 'snoozed'], 500);
-    return c.body(buildCalendar(items, c.var.user.timezone, d.now()), 200, {
+    const blocks = await d.store.listBlocks(c.var.user.id);
+    return c.body(buildCalendar(items, c.var.user.timezone, d.now(), 'Rafta', blocks), 200, {
       'content-type': 'text/calendar; charset=utf-8',
       'content-disposition': 'attachment; filename="rafta.ics"',
     });
+  });
+
+  // --- Takvim: hatırlatmalar ve çalışma blokları ---------------------------------
+  api.get('/api/reminders', async (c) => {
+    const list = await d.store.listScheduledReminders(c.var.user.id);
+    return c.json({ reminders: list.map((r) => ({ id: r.id, itemId: r.itemId, kind: r.kind, sendAt: r.sendAt.toISOString() })) });
+  });
+
+  api.get('/api/blocks', async (c) => {
+    const blocks = await d.store.listBlocks(c.var.user.id);
+    return c.json({ blocks: blocks.map(blockJson) });
+  });
+
+  api.get('/api/blocks/suggestions', async (c) => {
+    const user = c.var.user;
+    const [items, blocks] = await Promise.all([d.store.listItems(user.id, ['open', 'snoozed'], 500), d.store.listBlocks(user.id)]);
+    const suggestions = suggestBlocks(items, blocks, d.now(), prefsOf(user));
+    return c.json({ suggestions: suggestions.map((s) => ({ itemId: s.itemId, startAt: s.startAt.toISOString(), endAt: s.endAt.toISOString() })) });
+  });
+
+  const blockBody = z
+    .object({ startAt: z.string().datetime({ offset: true }), endAt: z.string().datetime({ offset: true }) })
+    .refine((b) => new Date(b.endAt) > new Date(b.startAt), 'Bitiş başlangıçtan sonra olmalı')
+    .refine((b) => +new Date(b.endAt) - +new Date(b.startAt) <= 12 * 3600_000, 'Blok en fazla 12 saat');
+
+  api.post('/api/blocks', async (c) => {
+    const raw = await c.req.json().catch(() => null);
+    const body = blockBody.and(z.object({ itemId: z.string().uuid() })).safeParse(raw);
+    if (!body.success) return c.json({ error: 'bad_request' }, 400);
+    const item = await d.store.getItem(body.data.itemId);
+    if (!item || item.userId !== c.var.user.id) return c.json({ error: 'not_found' }, 404);
+    const block = await d.store.createBlock({
+      userId: c.var.user.id,
+      itemId: item.id,
+      startAt: new Date(body.data.startAt),
+      endAt: new Date(body.data.endAt),
+    });
+    await d.store.insertInteraction(c.var.user.id, item.id, 'block', d.now());
+    return c.json({ block: blockJson(block) }, 201);
+  });
+
+  api.patch('/api/blocks/:id', async (c) => {
+    const body = blockBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: 'bad_request' }, 400);
+    const block = await d.store.updateBlock(c.var.user.id, c.req.param('id'), {
+      startAt: new Date(body.data.startAt),
+      endAt: new Date(body.data.endAt),
+    });
+    return block ? c.json({ block: blockJson(block) }) : c.json({ error: 'not_found' }, 404);
+  });
+
+  api.delete('/api/blocks/:id', async (c) => {
+    const ok = await d.store.deleteBlock(c.var.user.id, c.req.param('id'));
+    return ok ? c.json({ ok: true }) : c.json({ error: 'not_found' }, 404);
+  });
+
+  /** Telefon kısayolu (HTTP Shortcuts) için yeni cihaz anahtarı; yalnızca bir kez gösterilir. */
+  api.post('/api/devices', async (c) => {
+    const body = z.object({ name: z.string().trim().min(1).max(60) }).safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: 'bad_request' }, 400);
+    const { token, device } = await createDeviceToken(d.store, c.var.user, body.data.name, d.now());
+    return c.json({ token, device: { id: device.id, name: device.name } }, 201);
   });
 
   // --- Tarayıcıdan kayıt --------------------------------------------------------

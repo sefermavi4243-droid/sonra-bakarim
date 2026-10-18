@@ -1,4 +1,5 @@
 import type {
+  Block,
   Device,
   InboundMessage,
   Item,
@@ -103,6 +104,13 @@ export interface Store {
   touchDevice(id: string, at: Date): Promise<void>;
   listDevices(userId: string): Promise<Device[]>;
   deleteDevice(userId: string, id: string): Promise<boolean>;
+
+  /** Kullanıcının gelecekteki ve bekleyen hatırlatmaları (takvimde gösterilir). */
+  listScheduledReminders(userId: string): Promise<Reminder[]>;
+  listBlocks(userId: string): Promise<Block[]>;
+  createBlock(input: { userId: string; itemId: string; startAt: Date; endAt: Date }): Promise<Block>;
+  updateBlock(userId: string, id: string, patch: { startAt: Date; endAt: Date }): Promise<Block | null>;
+  deleteBlock(userId: string, id: string): Promise<boolean>;
 }
 
 export const OPEN_STATUSES: ItemStatus[] = ['open', 'snoozed'];

@@ -2,13 +2,13 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <title>Sonra Bakarım</title>
+    <title>Rafta</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header>
       <img src="icons/icon32.png" alt="" width="20" height="20" />
-      <span class="brand">Sonra Bakarım</span>
+      <span class="brand">Rafta</span>
       <button id="openPanel" class="ghost small" hidden>Panel</button>
     </header>
 
@@ -26,7 +26,7 @@
       <details>
         <summary>Sunucu adresi</summary>
         <input id="server" type="url" spellcheck="false" aria-label="Sunucu adresi" />
-        <p class="hint">Sonra Bakarım'ın çalıştığı adres. Kendi bilgisayarındaysa değiştirme.</p>
+        <p class="hint">Rafta'nın çalıştığı adres. Kendi bilgisayarındaysa değiştirme.</p>
       </details>
       <p id="connectError" class="error" role="alert"></p>
     </section>
@@ -37,8 +37,8 @@
         <div id="pageTitle" class="page-title"></div>
         <div id="pageState" class="page-state"></div>
       </div>
-      <textarea id="note" rows="2" placeholder="Not ekle (isteğe bağlı): ör. Cuma'ya kadar CV'yi güncelle"></textarea>
-      <button id="save" class="primary wide">Sonra bak</button>
+      <textarea id="note" rows="2" placeholder="Not ekle (isteğe bağlı): ör. cumaya kadar CV'yi güncelle"></textarea>
+      <button id="save" class="primary wide">Rafa kaldır</button>
       <p id="saveStatus" class="status" role="status"></p>
 
       <h2>Yaklaşanlar</h2>
@@ -46,7 +46,7 @@
       <p id="emptyUpcoming" class="hint" hidden>Yaklaşan bir son tarih yok.</p>
 
       <footer>
-        <span class="hint">Kısayol: Alt+Shift+K ile hemen kaydet</span>
+        <span class="hint">Alt+Shift+K: hemen rafa kaldır</span>
         <button id="disconnect" class="ghost small">Bağlantıyı kes</button>
       </footer>
     </section>

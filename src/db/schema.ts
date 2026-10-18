@@ -100,6 +100,24 @@ export const devices = pgTable(
   (t) => [uniqueIndex('devices_token_hash_key').on(t.tokenHash), index('devices_user_idx').on(t.userId)],
 );
 
+/** Takvimde bir kayda ayrılmış çalışma bloğu (geriye doğru planlama). */
+export const blocks = pgTable(
+  'blocks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id, { onDelete: 'cascade' }),
+    startAt: tz('start_at').notNull(),
+    endAt: tz('end_at').notNull(),
+    createdAt: tz('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('blocks_user_start_idx').on(t.userId, t.startAt)],
+);
+
 /** `bağla` komutunun verdiği tek kullanımlık 6 haneli kodlar (özet olarak). */
 export const linkCodes = pgTable('link_codes', {
   codeHash: text('code_hash').primaryKey(),
@@ -207,6 +225,7 @@ export const inboundMessages = pgTable(
 
 export type User = typeof users.$inferSelect;
 export type Device = typeof devices.$inferSelect;
+export type Block = typeof blocks.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type Reminder = typeof reminders.$inferSelect;

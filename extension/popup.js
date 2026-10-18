@@ -40,7 +40,7 @@ async function loadPageState() {
     const { item } = await api(`/api/lookup?url=${encodeURIComponent(currentTab.url)}`);
     if (item) {
       const due = dueOf(item);
-      el.textContent = `Kayıtlı${due ? ` · son tarih ${shortDate(due)}` : ''}`;
+      el.textContent = `Rafında${due ? ` · son tarih ${shortDate(due)}` : ''}`;
       el.classList.add('saved');
       $('save').textContent = 'Tekrar gönder';
     }
@@ -142,8 +142,8 @@ $('save').addEventListener('click', async () => {
       status.className = 'status ok';
       status.textContent =
         result.state === 'saved'
-          ? `Kaydedildi: ${result.item.title}${due ? ` · ${shortDate(due)}` : ''}`
-          : `Zaten kayıtlı: ${result.item.title}`;
+          ? `Rafa koydum: ${result.item.title}${due ? ` · ${shortDate(due)}` : ''}`
+          : `Zaten rafta: ${result.item.title}`;
       $('note').value = '';
       loadPageState();
       loadUpcoming();

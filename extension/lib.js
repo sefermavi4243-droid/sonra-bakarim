@@ -34,7 +34,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new ApiError(0, { message: `Sunucuya ulaşılamadı (${cfg.server}). Sonra Bakarım bilgisayarında açık mı?` });
+    throw new ApiError(0, { message: `Sunucuya ulaşılamadı (${cfg.server}). Rafta bilgisayarında açık mı?` });
   }
   const data = await res.json().catch(() => null);
   if (res.status === 401 && path !== '/api/link') {
@@ -123,9 +123,9 @@ export function dueOf(item) {
 }
 
 export const FAIL_TEXT = {
-  needs_text: 'Bu sayfada okunacak metin bulamadım. Önemli kısmı seçip sağ tıkla "Sonra bak: seçili metin" de.',
+  needs_text: 'Bu sayfada okunacak metin bulamadım. Önemli kısmı seçip sağ tıkla "Rafa kaldır: seçili metin" de.',
   unreadable: 'İçeriği okuyamadım. Ekran görüntüsünü Telegram\'dan gönderebilirsin.',
-  off_topic: 'Bu sayfada kaydedilecek bir iş, etkinlik ya da başvuru bulamadım.',
+  off_topic: 'Bu sayfada rafa kaldırılacak bir iş, etkinlik ya da başvuru bulamadım.',
   error: 'Bir sorun oldu, birazdan tekrar dener misin?',
   timeout: 'İşlem uzun sürdü. Kayıt yine de Telegram\'a düşebilir.',
 };

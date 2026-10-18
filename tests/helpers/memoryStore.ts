@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Device, InboundMessage, Item, ItemStatus, Reminder, User } from '../../src/db/schema.js';
+import type { Block, Device, InboundMessage, Item, ItemStatus, Reminder, User } from '../../src/db/schema.js';
 import { OPEN_STATUSES, type Store } from '../../src/db/store.js';
 
 /** Testler için bellek içi Store. Davranışı drizzleStore ile aynı tutulur. */
@@ -11,6 +11,7 @@ export class MemoryStore implements Store {
   interactions: { userId: string; itemId: string | null; action: string; at: Date }[] = [];
   preps: { itemId: string; kind: string; content: string }[] = [];
   devices: Device[] = [];
+  blocks: Block[] = [];
   linkCodes: { codeHash: string; userId: string; expiresAt: Date }[] = [];
 
   async touchUser(input: Parameters<Store['touchUser']>[0], at: Date): Promise<User> {
@@ -202,6 +203,7 @@ export class MemoryStore implements Store {
     this.preps = this.preps.filter((p) => !itemIds.has(p.itemId));
     this.items = this.items.filter((i) => i.userId !== userId);
     this.inbound = this.inbound.filter((m) => m.userId !== userId);
+    this.blocks = this.blocks.filter((b) => b.userId !== userId);
     this.devices = this.devices.filter((d) => d.userId !== userId);
     this.linkCodes = this.linkCodes.filter((c) => c.userId !== userId);
     this.users = this.users.filter((u) => u.id !== userId);
@@ -256,6 +258,34 @@ export class MemoryStore implements Store {
   }
   async listDevices(userId: string) {
     return this.devices.filter((d) => d.userId === userId).map((d) => ({ ...d }));
+  }
+  async listScheduledReminders(userId: string) {
+    return this.reminders
+      .filter((r) => r.userId === userId && r.status === 'scheduled')
+      .sort((a, b) => +a.sendAt - +b.sendAt)
+      .map((r) => ({ ...r }));
+  }
+  async listBlocks(userId: string) {
+    return this.blocks
+      .filter((b) => b.userId === userId)
+      .sort((a, b) => +a.startAt - +b.startAt)
+      .map((b) => ({ ...b }));
+  }
+  async createBlock(input: { userId: string; itemId: string; startAt: Date; endAt: Date }) {
+    const b: Block = { id: randomUUID(), ...input, createdAt: new Date() };
+    this.blocks.push(b);
+    return { ...b };
+  }
+  async updateBlock(userId: string, id: string, patch: { startAt: Date; endAt: Date }) {
+    const b = this.blocks.find((x) => x.userId === userId && x.id === id);
+    if (!b) return null;
+    Object.assign(b, patch);
+    return { ...b };
+  }
+  async deleteBlock(userId: string, id: string) {
+    const before = this.blocks.length;
+    this.blocks = this.blocks.filter((b) => !(b.userId === userId && b.id === id));
+    return this.blocks.length < before;
   }
   async deleteDevice(userId: string, id: string) {
     const before = this.devices.length;

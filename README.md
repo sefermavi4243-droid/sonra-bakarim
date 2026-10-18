@@ -1,54 +1,71 @@
-# Sonra Bakarım
+<p align="center"><img src="docs/rafta-logo.png" width="96" alt="Rafta"></p>
 
-"Sonra bakarım" dediğin her şeyi senin yerine hatırlayan bir mesajlaşma asistanı.
+# Rafta
 
-Bir iş ilanı linki, bir etkinlik afişinin fotoğrafı, burs yönergesinin PDF'i ya da
-yürürken kaydettiğin bir sesli not: Sonra Bakarım'a ilet, gerisini o halletsin. İçeriği
-okur, son tarihi bulur, ne gerektiğini çıkarır ve sen unutmadan önce hatırlatır.
+**Rafa kaldır, unutma.**
+
+İş ilanı, etkinlik afişi, burs yönergesi, sesli not ya da "bu hafta Medium yazımı
+yayınlayacağım" dediğin bir hedef: Rafta'ya at, gerisini o halletsin. İçeriği okur,
+son tarihi bulur, takvimine koyar, işe ne zaman oturman gerektiğini planlar ve sen
+unutmadan önce hatırlatır.
 
 ## Nasıl çalışır
 
-1. **Gönder.** Bota link, ekran görüntüsü, fotoğraf, PDF, sesli not ya da düz metin at.
-2. **Kaydedilir.** Birkaç saniye içinde bir kayıt kartı gelir:
+1. **Rafa kaldır.** Telegram'da bota, tarayıcı uzantısına, panele ya da telefonundaki
+   Rafta simgesine; link, ekran görüntüsü, PDF, sesli not ya da düz metin.
+2. **Rafa koyar.** Birkaç saniye içinde bir kart gelir:
 
    ```
-   Kaydettim: Veri Analisti Stajyeri
-   Kurum: Örnek Fintech
+   Rafa koydum: Veri Analisti Stajyeri, Örnek Fintech
    Son tarih: 24 Ekim Cumartesi 23:59
    Gerekenler: CV, Motivasyon yazısı
    Süre: yaklaşık 45 dakika
-   [Tamam] [Tarihi değiştir] [Hemen hazırla]
+   [Tamam] [Tarihi değiştir] [Hemen hazırla] [Takvime ekle]
    ```
 
-3. **Zamanında hatırlatılır.** Son tarihe göre en fazla üç hatırlatma planlanır: işe
-   başlaman için bir plan mesajı, ardından bir dürtme ve son çağrı. Hatırlatmaların
-   üzerindeki düğmelerle işi kapatır, erteler ya da vazgeçersin.
+3. **Vakti gelince indirir.** Son tarihe göre en fazla üç hatırlatma; düğmelerle
+   kapatır, erteler ya da bırakırsın.
 
-## Her yerden yakala, tek yerde gör
+## Her yerden rafa kaldır
 
-- **Telefondan:** Telegram'da bota ilet ya da paylaş.
+- **Telefondan, Telegram'a girmeden:** Rafta'yı ana ekrana uygulama gibi yükle.
+  Simgeye dokun, "Ne rafa kalksın?" ekranına yaz ya da klavyedeki mikrofona söyle.
+  Herhangi bir uygulamada **Paylaş → Rafta** de, link doğrudan rafa kalksın. İstersen
+  HTTP Shortcuts ile tek dokunuşluk bir ana ekran widget'ı da kurabilirsin.
+- **Telegram'dan:** bota ilet, paylaş ya da sesli not at.
 - **Tarayıcıdan:** uzantı simgesine tıkla, `Alt+Shift+K`'ye bas ya da sağ tıkla
-  "Sonra bak". Sayfa metni tarayıcının içinden okunduğu için LinkedIn gibi giriş
-  isteyen sayfalar da kaydedilir.
-- **Panelden:** link ya da notu yapıştır, Enter'a bas.
+  "Rafa kaldır". Sayfa metni tarayıcının içinden okunduğu için LinkedIn gibi giriş
+  isteyen sayfalar da olur.
 
-Nereden gelirse gelsin hepsi aynı hesapta toplanır. Aynı ilanı telefondan ve
-tarayıcıdan iki kez gönderirsen tek kayıt kalır. Hatırlatmalar her zaman telefonuna düşer.
+Nereden gelirse gelsin hepsi tek rafta. Aynı ilanı iki yoldan gönderirsen tek kayıt kalır.
 
-## Sade bir takvim
+## Takvim
 
-Web paneli tek bakışta neyin ne zaman bittiğini gösterir:
+- **Hafta görünümü:** saat ızgarası, "şu an" çizgisi, her günün iş yükü. Gün sonu son
+  tarihleri ve hedefler üstte, saatli işler saatinde.
+- **Sürükle bırak:** bir kaydı başka güne ya da saate taşı; son tarih ve hatırlatmalar
+  kendiliğinden yeniden kurulur.
+- **Çalışma blokları:** Rafta her işin süresine bakıp son tarihten önce takviminde boş
+  bir yer önerir ("Çalış: Staj başvurusu, perşembe 20:00–20:45"). Tek tıkla onayla,
+  sürükleyerek taşı, alt kenarından süresini değiştir.
+- **Ay görünümü:** yoğun günler daha koyu; bir güne tıkla, o haftaya in.
+- **Hatırlatmalar da takvimde:** hangi gün ne zaman mesaj geleceğini görürsün.
+- **Kendi takvimine:** her kartta **Takvime ekle**; ya da kişisel abonelik adresini
+  Google, Outlook veya Apple Takvim'e ekle. Onayladığın çalışma blokları da orada görünür.
+- Klavye: `/` rafa kaldır, `T` bugün, `W` hafta, `M` ay, `←` `→` gezin.
 
-- **Ajanda:** gecikmiş, bugün, yarın, bu hafta, sonra ve tarihsiz; üstte haftanın
-  tahmini iş yükü.
-- **Ay görünümü:** son tarihler ve etkinlikler ayrı renklerde; bir güne tıkla, o günün
-  işleri listelensin.
-- **Kayıt detayı:** son tarihin kaynaktaki cümlesi, işaretlenebilir gerekenler listesi,
-  tek tıkla Yaptım, Ertele, Tarihi değiştir, Takvime ekle.
+## Bu hafta
 
-Kendi takvim uygulamanı kullanmak istersen her kartta bir **Takvime ekle** düğmesi var;
-telefonda dokunman yeter. Ya da kişisel abonelik adresini Outlook, Thunderbird veya
-Apple Takvim'e ekle, kayıtların orada kendiliğinden güncellensin.
+Bota "bu hafta portfolyo projemi bitireceğim", "hafta sonuna kadar LinkedIn
+gönderisini paylaşacağım" yaz; Rafta bunları **haftalık hedef** olarak rafa koyar ve
+hafta boyunca takip eder:
+
+- Pazartesi sabahı: "Yeni hafta. Rafında 3 haftalık hedef var."
+- Çarşamba akşamı ara kontrol, cuma akşamı son dürtme.
+- Pazar akşamı özet: "Bu haftanın hedefleri: 2/3 tamam." Bitmeyenler için
+  **Haftaya taşı** ya da **Bırak**.
+
+Panelde **Bu hafta** sayfası hedeflerini ilerleme halkasıyla gösterir.
 
 ## Haftanı önceden gör
 
@@ -123,7 +140,7 @@ açık olabilir.
 
 ## Gizlilik ve maliyet
 
-Sonra Bakarım tamamen kendi bilgisayarında çalışabilir:
+Rafta tamamen kendi bilgisayarında çalışabilir:
 
 - **Dil modeli yereldir.** Ollama, LM Studio ya da llama.cpp gibi OpenAI uyumlu bir
   yerel sunucu kullanır; içeriklerin üçüncü taraf bir yapay zekâ servisine gitmez.
@@ -145,8 +162,8 @@ Sonra Bakarım tamamen kendi bilgisayarında çalışabilir:
 ### Adımlar
 
 ```bash
-git clone <repo-adresi> sonra-bakarim
-cd sonra-bakarim
+git clone <repo-adresi> rafta
+cd rafta
 npm install
 
 ollama pull gemma3:12b
@@ -179,11 +196,20 @@ Bot çalışırken tarayıcıda **http://localhost:3000** adresini aç. Telegram
 1. Tarayıcıda `chrome://extensions` adresini aç (Edge'de `edge://extensions`).
 2. Sağ üstten **Geliştirici modu**nu aç.
 3. **Paketlenmemiş öğe yükle** düğmesiyle projedeki `extension` klasörünü seç.
-4. Araç çubuğundaki Sonra Bakarım simgesine tıkla ve bağlantı kodunu gir.
+4. Araç çubuğundaki Rafta simgesine tıkla ve bağlantı kodunu gir.
 
 Kısayollar: `Alt+Shift+S` pencereyi açar, `Alt+Shift+K` sayfayı doğrudan kaydeder.
 
-### Telefondan panel ve Google Takvim (isteğe bağlı)
+### Telefon: Tailscale ile güvenli erişim
+
+Telefonun, bilgisayarındaki Rafta'ya internete kapı açmadan ulaşsın:
+
+1. Bilgisayara ve telefona [Tailscale](https://tailscale.com) kur, ikisinde de aynı hesapla giriş yap.
+2. Bilgisayarda: `tailscale serve --bg 3000`. Çıkan `https://<bilgisayar>.<ağ>.ts.net` adresini
+   `.env` içinde `APP_URL` olarak yaz ve Rafta'yı yeniden başlat.
+3. Telefonda Chrome ile bu adresi aç, `bağla` kodunla giriş yap, menüden **Ana ekrana ekle**.
+
+### Tarayıcı dışından erişim: Cloudflare tüneli (isteğe bağlı)
 
 Panel ve takvim aboneliği varsayılan olarak yalnızca bu bilgisayardan açılır. Telefondan
 erişmek ya da Google Takvim'e abone olmak için dışarıdan erişilebilen bir adres gerekir:

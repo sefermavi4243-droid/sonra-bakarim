@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import type { Item } from '../db/schema.js';
+import type { Block, Item } from '../db/schema.js';
 
 /**
  * RFC 5545 takvim dosyası. Son tarihler ve etkinlikler ayrı olaylar olur:
@@ -103,7 +103,23 @@ export function itemEvents(item: Item, zone: string, now: Date): string[][] {
   return events;
 }
 
-export function buildCalendar(items: Item[], zone: string, now: Date, name = 'Rafta'): string {
+/** Onaylanmış çalışma bloğu: "Çalış: <başlık>". */
+export function blockEvent(block: Block, item: Item, now: Date): string[] {
+  return [
+    'BEGIN:VEVENT',
+    `UID:${block.id}-block@sonra-bakarim`,
+    `DTSTAMP:${utc(now)}`,
+    `SUMMARY:${escapeText(`Çalış: ${item.title}`)}`,
+    `DTSTART:${utc(block.startAt)}`,
+    `DTEND:${utc(block.endAt)}`,
+    ...(item.sourceUrl ? [`URL:${item.sourceUrl}`] : []),
+    ...alarm('-PT10M', `10 dakika sonra: ${item.title}`),
+    'END:VEVENT',
+  ];
+}
+
+export function buildCalendar(items: Item[], zone: string, now: Date, name = 'Rafta', blocks: Block[] = []): string {
+  const byId = new Map(items.map((i) => [i.id, i]));
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -115,6 +131,7 @@ export function buildCalendar(items: Item[], zone: string, now: Date, name = 'Ra
     'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
     'X-PUBLISHED-TTL:PT1H',
     ...items.flatMap((item) => itemEvents(item, zone, now).flat()),
+    ...blocks.flatMap((b) => (byId.has(b.itemId) ? blockEvent(b, byId.get(b.itemId)!, now) : [])),
     'END:VCALENDAR',
   ];
   return `${lines.map(foldLine).join('\r\n')}\r\n`;

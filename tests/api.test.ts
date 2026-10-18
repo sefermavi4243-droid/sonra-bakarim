@@ -83,7 +83,7 @@ describe('bağlama', () => {
     const cookie = res.headers.get('set-cookie')!;
     expect(cookie).toContain(`${SESSION_COOKIE}=`);
     expect(cookie).toContain('HttpOnly');
-    expect(cookie).toContain('SameSite=Strict');
+    expect(cookie).toContain('SameSite=Lax');
     const session = cookie.split(';')[0]!;
     expect((await api.request('/api/items', { headers: { cookie: session } })).status).toBe(200);
     expect((await api.request('/api/me', { method: 'PATCH', body: '{"morningBrief":true}', headers: { cookie: session } })).status).toBe(403);

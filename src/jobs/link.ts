@@ -44,6 +44,13 @@ export async function redeemLinkCode(
   return { token, device, user };
 }
 
+/** Oturum açmış kullanıcı için doğrudan yeni cihaz anahtarı (telefon kısayolu). */
+export async function createDeviceToken(store: Store, user: User, name: string, now: Date): Promise<{ token: string; device: Device }> {
+  const token = randomBytes(32).toString('base64url');
+  const device = await store.createDevice({ userId: user.id, name: name.trim().slice(0, 60) || 'Cihaz', tokenHash: sha256(token) }, now);
+  return { token, device };
+}
+
 /** Cihaz anahtarından kullanıcıyı bulur. */
 export async function authenticate(store: Store, token: string, now: Date): Promise<{ user: User; device: Device } | null> {
   if (!token || token.length < 20) return null;

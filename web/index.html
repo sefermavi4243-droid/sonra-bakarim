@@ -2,19 +2,26 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0f766e" />
-    <title>Sonra Bakarım</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#5B4FE9" />
+    <meta name="description" content="Rafta: rafa kaldır, unutma." />
+    <title>Rafta</title>
     <link rel="icon" href="favicon.png" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <!-- Giriş -->
     <main id="login" class="login" hidden>
       <div class="login-card">
-        <img src="icon.png" alt="" width="56" height="56" />
-        <h1>Sonra Bakarım</h1>
-        <p class="muted">Telegram'da botuna <b>bağla</b> yaz, gelen 6 haneli kodu buraya gir.</p>
+        <span class="logo"><img src="icon.png" alt="" width="40" height="40" />Rafta</span>
+        <h1>Rafa kaldır, unutma.</h1>
+        <p class="slogan">Telefonundan, tarayıcından ya da buradan; hepsi tek rafta.</p>
+        <ol>
+          <li>Telegram'da botuna <b>bağla</b> yaz.</li>
+          <li>Gelen 6 haneli kodu aşağıya gir.</li>
+        </ol>
         <form id="loginForm">
           <input id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" aria-label="Bağlantı kodu" required />
           <button class="btn primary" type="submit">Giriş</button>
@@ -23,57 +30,75 @@
       </div>
     </main>
 
-    <!-- Uygulama -->
-    <div id="app" hidden>
-      <header class="topbar">
-        <a class="brand" href="#ajanda"><img src="icon.png" alt="" width="26" height="26" /><span>Sonra Bakarım</span></a>
-        <form id="quickAdd" class="quick-add">
-          <input id="quickInput" placeholder="Link ya da not yapıştır, Enter'a bas" aria-label="Hızlı kayıt" autocomplete="off" />
-        </form>
-        <nav class="tabs" aria-label="Görünümler">
-          <a href="#ajanda" data-view="ajanda">Ajanda</a>
-          <a href="#takvim" data-view="takvim">Takvim</a>
-          <a href="#arsiv" data-view="arsiv">Arşiv</a>
-          <a href="#ayarlar" data-view="ayarlar">Ayarlar</a>
-        </nav>
+    <!-- Telefonda hızlı kayıt (ana ekran kısayolu ve Paylaş menüsü buraya açılır) -->
+    <main id="quick" class="quick" hidden>
+      <header>
+        <span class="logo"><img src="icon.png" alt="" width="30" height="30" />Rafta</span>
+        <a class="btn ghost sm" href="#raf">Rafı aç</a>
       </header>
+      <h1>Ne rafa kalksın?</h1>
+      <form id="quickForm">
+        <textarea id="quickText" placeholder="Link yapıştır ya da yaz: &quot;bu hafta Medium yazımı yayınlayacağım&quot;" aria-label="Rafa kaldırılacak şey"></textarea>
+        <div class="examples" id="quickExamples"></div>
+        <button class="btn primary big" type="submit">Rafa kaldır</button>
+      </form>
+      <p class="muted" style="margin-top: 12px">Klavyedeki mikrofona basıp söyleyebilirsin.</p>
+      <div id="quickResult" class="result"></div>
+    </main>
 
-      <main class="content">
-        <section id="view-ajanda" class="view">
-          <div id="summary" class="summary"></div>
-          <div id="agenda"></div>
-        </section>
+    <!-- Uygulama -->
+    <div id="app" class="shell" hidden>
+      <aside class="side">
+        <a class="logo" href="#raf"><img src="icon.png" alt="" width="30" height="30" />Rafta</a>
+        <nav class="nav" aria-label="Görünümler">
+          <a href="#raf" data-view="raf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 17h16" /><rect x="6" y="3" width="5" height="4" rx="1" /><rect x="13" y="12" width="5" height="5" rx="1" /></svg>
+            <span>Raf</span><span class="badge" id="badgeToday" hidden></span>
+          </a>
+          <a href="#takvim" data-view="takvim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+            <span>Takvim</span>
+          </a>
+          <a href="#hafta" data-view="hafta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" /><path d="M8 12l3 3 5-6" /></svg>
+            <span>Bu hafta</span>
+          </a>
+          <a href="#arsiv" data-view="arsiv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9M10 13h4" /></svg>
+            <span>Arşiv</span>
+          </a>
+          <a href="#ayarlar" data-view="ayarlar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" /></svg>
+            <span>Ayarlar</span>
+          </a>
+        </nav>
+        <div class="foot">
+          <div><kbd>/</kbd> rafa kaldır</div>
+          <div><kbd>T</kbd> bugün · <kbd>W</kbd> hafta · <kbd>M</kbd> ay</div>
+          <div><kbd>←</kbd> <kbd>→</kbd> önceki / sonraki</div>
+        </div>
+      </aside>
 
-        <section id="view-takvim" class="view" hidden>
-          <div class="cal-head">
-            <button class="btn icon" id="calPrev" aria-label="Önceki ay">&#8249;</button>
-            <h2 id="calTitle"></h2>
-            <button class="btn icon" id="calNext" aria-label="Sonraki ay">&#8250;</button>
-            <button class="btn" id="calToday">Bugün</button>
-          </div>
-          <div class="cal-legend">
-            <span><i class="dot deadline"></i>Son tarih</span>
-            <span><i class="dot event"></i>Etkinlik</span>
-          </div>
-          <div id="calendar" class="calendar" role="grid"></div>
-          <div id="dayList" class="day-list"></div>
-        </section>
+      <div class="main">
+        <header class="topbar">
+          <form id="captureForm" class="capture">
+            <input id="captureInput" placeholder="Rafa kaldır: link, not ya da &quot;bu hafta …&quot;" aria-label="Rafa kaldır" autocomplete="off" />
+            <span class="hint"><kbd>/</kbd></span>
+            <button class="btn primary sm" type="submit">Rafa kaldır</button>
+          </form>
+        </header>
 
-        <section id="view-arsiv" class="view" hidden>
-          <h2 class="section-title">Kapananlar</h2>
-          <div id="archive"></div>
-        </section>
-
-        <section id="view-ayarlar" class="view" hidden>
-          <div id="settings"></div>
-        </section>
-      </main>
+        <section id="view-raf" class="page view"></section>
+        <section id="view-takvim" class="page view" hidden></section>
+        <section id="view-hafta" class="page view" hidden></section>
+        <section id="view-arsiv" class="page view" hidden></section>
+        <section id="view-ayarlar" class="page view" hidden></section>
+      </div>
+      <a class="fab" href="#yeni" aria-label="Rafa kaldır">+</a>
     </div>
 
-    <!-- Kayıt detayı -->
     <div id="drawerBackdrop" class="backdrop" hidden></div>
     <aside id="drawer" class="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drawerTitle"></aside>
-
     <div id="toast" class="toast" role="status" hidden></div>
 
     <script type="module" src="app.js"></script>

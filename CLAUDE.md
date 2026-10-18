@@ -1,10 +1,10 @@
-# Sonra Bakarım
+# Rafta
 
 Kullanıcının "sonra bakarım" dediği şeyleri (link, ekran görüntüsü, sesli not, PDF,
 iletilen mesaj) WhatsApp üzerinden yakalayan, son tarihini çıkaran, işi önceden
 hazırlayan ve zamanında hatırlatan bir servis.
 
-- Ürünün tamamı: `docs/SPEC.md`
+- Ürünün tamamı: `docs/SPEC.md` (ürün adı artık **Rafta**; marka: `docs/MARKA.md`)
 - Fazlar, görevler ve kabul ölçütleri: `docs/ROADMAP.md`
 - Şu an üzerinde çalışılan faz: **Faz 1** + öne alınan **Paket 2+** (ROADMAP'te başka faza geçildiyse burayı güncelle)
 

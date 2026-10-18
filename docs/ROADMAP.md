@@ -148,6 +148,31 @@ CV eşleştirme, pazar özeti tut/seç/vazgeç akışı) Kapı 1'den sonra.
 - [x] İsteğe bağlı sabah brifingi (08:30); ikisi de günde en fazla bir kez, sessiz saatlere uyar.
 - [x] `özet`, `özet aç/kapat`, `brifing aç/kapat`.
 
+## Paket 3: Rafta
+
+### 1. Marka
+- [x] Ad Rafta, slogan "Rafa kaldır, unutma.", marka belgesi `docs/MARKA.md`.
+- [x] Mürekkep moru ana renk, safran yalnızca zamanla ilgili dikkat için; simge yeniden üretildi.
+- [x] Bot metinleri, panel, uzantı ve README yeni ad ve tonla.
+
+### 2. Takvim
+- [x] Hafta görünümü: saat ızgarası, şu an çizgisi, gün yükü çubuğu, gün sonu işler üstte.
+- [x] Sürükle bırak: son tarih ve blok taşınır, hatırlatmalar yeniden kurulur; geçmişe taşınamaz.
+- [x] Çalışma blokları: geriye doğru öneri (testli kurallar), onay, taşıma, süre değiştirme; .ics'e girer.
+- [x] Ay görünümünde yoğunluk ısısı; filtreler; hatırlatmalar takvimde; klavye kısayolları.
+
+### 3. Haftalık hedefler
+- [x] "bu hafta / hafta sonuna kadar / hafta içi / gelecek hafta" çözülür; hedef kategorisi.
+- [x] Ritim: çarşamba 19:00, cuma 18:00, son gün 11:00; pazartesi 09:00 hafta planı.
+- [x] Pazar özetinde tamamlanma oranı; bitmeyenler için Haftaya taşı / Bırak.
+- [x] Panelde "Bu hafta" sayfası.
+
+### 4. Telefon
+- [x] Panel yüklenebilir uygulama (PWA): simge, kısayollar (Rafa kaldır, Bu hafta, Takvim), Paylaş hedefi.
+- [x] "Ne rafa kalksın?" hızlı kayıt ekranı.
+- [x] HTTP Shortcuts widget'ı için ayrı cihaz anahtarı ve kurulum adımları.
+- [ ] Tailscale ile telefondan erişim (kullanıcı girişi bekleniyor).
+
 ## Faz 2–4 (kalan)
 
 Faz 1 kapısı geçilince bu bölüm, Faz 1'deki gibi görevlere ve kabul ölçütlerine

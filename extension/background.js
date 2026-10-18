@@ -10,10 +10,10 @@ const MENU = {
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: MENU.page, title: 'Sonra bak: bu sayfa', contexts: ['page'] });
-    chrome.contextMenus.create({ id: MENU.selection, title: 'Sonra bak: seçili metin', contexts: ['selection'] });
-    chrome.contextMenus.create({ id: MENU.link, title: 'Sonra bak: bu link', contexts: ['link'] });
-    chrome.contextMenus.create({ id: MENU.image, title: 'Sonra bak: bu görsel', contexts: ['image'] });
+    chrome.contextMenus.create({ id: MENU.page, title: 'Rafa kaldır: bu sayfa', contexts: ['page'] });
+    chrome.contextMenus.create({ id: MENU.selection, title: 'Rafa kaldır: seçili metin', contexts: ['selection'] });
+    chrome.contextMenus.create({ id: MENU.link, title: 'Rafa kaldır: bu link', contexts: ['link'] });
+    chrome.contextMenus.create({ id: MENU.image, title: 'Rafa kaldır: bu görsel', contexts: ['image'] });
   });
   chrome.alarms.create('badge', { periodInMinutes: 15 });
   refreshBadge();
@@ -78,12 +78,12 @@ function notify(id, title, message) {
 async function captureAndNotify(payload) {
   const { token } = await getConfig();
   if (!token) {
-    notify(`sb-${Date.now()}`, 'Sonra Bakarım bağlı değil', 'Uzantı simgesine tıklayıp Telegram\'dan aldığın kodu gir.');
+    notify(`sb-${Date.now()}`, 'Rafta bağlı değil', 'Uzantı simgesine tıklayıp Telegram\'dan aldığın kodu gir.');
     return;
   }
   try {
     const id = await sendCapture(payload);
-    notify(id, 'Kaydediliyor', payload.title || payload.url || 'İçerik okunuyor…');
+    notify(id, 'Rafa kaldırılıyor', payload.title || payload.url || 'İçerik okunuyor…');
     await track(id, payload.title);
   } catch (err) {
     notify(`sb-${Date.now()}`, 'Kaydedilemedi', err.message);
@@ -99,10 +99,10 @@ async function track(id, title) {
     const status = await waitCapture(id);
     if (status.state === 'saved') {
       const due = dueOf(status.item);
-      notify(id, `Kaydedildi: ${status.item.title}`, due ? `Son tarih: ${shortDate(due)}` : 'Tarihsiz kaydedildi.');
+      notify(id, `Rafa koydum: ${status.item.title}`, due ? `Son tarih: ${shortDate(due)}` : 'Tarihsiz kaydedildi.');
     } else if (status.state === 'duplicate') {
       const due = dueOf(status.item);
-      notify(id, 'Bunu zaten kaydetmiştin', `${status.item.title}${due ? ` · ${shortDate(due)}` : ''}`);
+      notify(id, 'Bu zaten rafta', `${status.item.title}${due ? ` · ${shortDate(due)}` : ''}`);
     } else {
       notify(id, 'Kaydedilemedi', FAIL_TEXT[status.reason] || FAIL_TEXT.error);
     }
@@ -126,9 +126,9 @@ async function refreshBadge() {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const due = items.filter((i) => dueOf(i) && new Date(dueOf(i)) <= end).length;
-    await chrome.action.setBadgeBackgroundColor({ color: '#0F766E' });
+    await chrome.action.setBadgeBackgroundColor({ color: '#F26B1D' });
     await chrome.action.setBadgeText({ text: due ? String(due) : '' });
-    await chrome.action.setTitle({ title: due ? `Sonra bak · bugün ${due} iş` : 'Sonra bak' });
+    await chrome.action.setTitle({ title: due ? `Rafta · bugün ${due} iş` : 'Rafa kaldır' });
   } catch {
     await chrome.action.setBadgeText({ text: '' });
   }
@@ -147,7 +147,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, change, tab) => {
     if (seen[key]) return;
     await chrome.storage.session.set({ [key]: true });
     const due = dueOf(item);
-    notify(`seen-${item.id}`, 'Bu sayfayı kaydetmiştin', `${item.title}${due ? ` · son tarih ${shortDate(due)}` : ''}`);
+    notify(`seen-${item.id}`, 'Bu sayfa rafında', `${item.title}${due ? ` · son tarih ${shortDate(due)}` : ''}`);
   } catch {
     // Sunucu kapalıysa sessiz geç.
   }

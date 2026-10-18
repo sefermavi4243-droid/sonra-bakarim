@@ -1,0 +1,28 @@
+{
+  "name": "Rafta",
+  "short_name": "Rafta",
+  "description": "Rafa kaldır, unutma. Son tarihleri bulur, takvimine koyar, zamanında hatırlatır.",
+  "id": "/",
+  "start_url": "/#raf",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "tr",
+  "background_color": "#FAF9F6",
+  "theme_color": "#5B4FE9",
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Rafa kaldır", "short_name": "Kaldır", "url": "/#yeni", "icons": [{ "src": "/icon.png", "sizes": "192x192" }] },
+    { "name": "Bu hafta", "url": "/#hafta", "icons": [{ "src": "/icon.png", "sizes": "192x192" }] },
+    { "name": "Takvim", "url": "/#takvim", "icons": [{ "src": "/icon.png", "sizes": "192x192" }] }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
+}
