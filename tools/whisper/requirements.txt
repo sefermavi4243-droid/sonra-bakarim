@@ -1,0 +1,3 @@
+faster-whisper==1.2.1
+# Windows'ta ctranslate2'nin ihtiyaç duyduğu Visual C++ çalışma zamanı (yönetici izni gerekmez)
+msvc-runtime

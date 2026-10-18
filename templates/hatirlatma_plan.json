@@ -1,0 +1,8 @@
+{
+  "name": "hatirlatma_plan",
+  "language": "tr",
+  "category": "UTILITY",
+  "body": "{{1}} yaklaşık {{2}} sürüyor. Son tarih {{3}}; bugün başlamak için iyi bir zaman.",
+  "example": ["Veri Analisti Stajyeri başvurusu", "45 dakika", "24 Ekim Cumartesi 23:59"],
+  "buttons": ["Başladım", "Ertele"]
+}

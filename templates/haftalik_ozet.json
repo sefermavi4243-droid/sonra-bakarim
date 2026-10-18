@@ -1,0 +1,8 @@
+{
+  "name": "haftalik_ozet",
+  "language": "tr",
+  "category": "UTILITY",
+  "body": "Bu hafta {{1}} kayıt eklendi, {{2}} tanesi tamamlandı, {{3}} tanesi açık.",
+  "example": ["5", "2", "3"],
+  "buttons": ["Listem"]
+}

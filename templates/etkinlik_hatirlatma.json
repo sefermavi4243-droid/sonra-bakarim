@@ -1,0 +1,8 @@
+{
+  "name": "etkinlik_hatirlatma",
+  "language": "tr",
+  "category": "UTILITY",
+  "body": "{{1}} {{2}} tarihinde, {{3}} konumunda.",
+  "example": ["Kariyer Günü", "5 Kasım Perşembe 19:00", "Kampüs Kongre Merkezi"],
+  "buttons": ["Gideceğim", "Vazgeç"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "hatirlatma_son_tarih",
+  "language": "tr",
+  "category": "UTILITY",
+  "body": "{{1}} için son tarih {{2}}. Gerekenler: {{3}}.",
+  "example": ["Veri Analisti Stajyeri başvurusu", "24 Ekim Cumartesi 23:59", "CV, motivasyon yazısı"],
+  "buttons": ["Yaptım", "Ertele", "Vazgeç"]
+}

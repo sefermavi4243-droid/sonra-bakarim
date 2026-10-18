@@ -1,0 +1,8 @@
+{
+  "name": "kayit_kontrol",
+  "language": "tr",
+  "category": "UTILITY",
+  "body": "{{1}} kaydın {{2}} gündür açık. Hâlâ istiyor musun?",
+  "example": ["Notion AI denemesi", "14"],
+  "buttons": ["Yaptım", "Ertele", "Vazgeç"]
+}
