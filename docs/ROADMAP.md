@@ -171,7 +171,7 @@ CV eşleştirme, pazar özeti tut/seç/vazgeç akışı) Kapı 1'den sonra.
 - [x] Panel yüklenebilir uygulama (PWA): simge, kısayollar (Rafa kaldır, Bu hafta, Takvim), Paylaş hedefi.
 - [x] "Ne rafa kalksın?" hızlı kayıt ekranı.
 - [x] HTTP Shortcuts widget'ı için ayrı cihaz anahtarı ve kurulum adımları.
-- [ ] Tailscale ile telefondan erişim (kullanıcı girişi bekleniyor).
+- [x] Tailscale ile telefondan erişim (HTTPS, yalnızca kendi ağın; telefon bağlandı).
 
 ## Faz 2–4 (kalan)
 
