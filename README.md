@@ -200,6 +200,17 @@ Bot çalışırken tarayıcıda **http://localhost:3000** adresini aç. Telegram
 
 Kısayollar: `Alt+Shift+S` pencereyi açar, `Alt+Shift+K` sayfayı doğrudan kaydeder.
 
+Uzantının yapabildikleri:
+
+- **Sitenin kendi bilgisini okur.** İlan ve etkinlik siteleri son başvuru, etkinlik
+  tarihi, kurum ve konumu sayfaya makine için gömer (JSON-LD). Rafta bunu okur; tarih
+  tahmin edilmez, doğrudan siteden gelir ve kayıt daha hızlı olur.
+- **Masaüstü hatırlatması:** hatırlatma vakti gelince Telegram mesajının yanında
+  bilgisayarında da **Yaptım** ve **3 saat ertele** düğmeli bir bildirim çıkar.
+- **Sayfada vurgu:** rafındaki bir sayfayı yeniden açınca son tarih cümlesi safranla
+  işaretlenir, köşede "Rafta · son tarih …" etiketi çıkar (bir kez izin verilir).
+- **Kuyruk:** Rafta kapalıyken rafa kaldırdıkların uzantıda bekler, açılınca gönderilir.
+
 ### Telefon: Tailscale ile güvenli erişim
 
 Telefonun, bilgisayarındaki Rafta'ya internete kapı açmadan ulaşsın:

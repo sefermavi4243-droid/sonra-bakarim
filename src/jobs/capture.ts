@@ -15,6 +15,8 @@ export const captureSchema = z
     /** Tarayıcıda okunmuş sayfa metni (giriş isteyen sayfalarda da dolu). */
     text: z.string().max(200_000).optional(),
     selection: z.string().trim().max(20_000).optional(),
+    /** Sayfaya gömülü yapılandırılmış veri (JSON-LD), uzantının okunur hâle getirdiği satırlar. */
+    structured: z.string().trim().max(5_000).optional(),
     imageUrl: z.string().trim().url().max(4000).optional(),
     note: z.string().trim().max(1000).optional(),
   })
@@ -51,6 +53,9 @@ const hash = (s: string) => createHash('sha256').update(s).digest('hex');
 export function linkDedupeHash(canonical: string): string {
   return hash(canonical);
 }
+
+/** Yapılandırılmış veri geldiğinde sayfa metninden bu kadarı gönderilir. */
+export const STRUCTURED_PAGE_CHARS = 4_000;
 
 /** Sayfa metni bu uzunluktaysa sunucu sayfayı yeniden açmaz. */
 const PAGE_TEXT_MIN = 200;
@@ -95,12 +100,18 @@ async function runCapture(deps: AppDeps, user: User, raw: unknown): Promise<Capt
   const texts: ExtractInput['texts'] = [];
   if (c.note) texts.push({ label: 'Kullanıcının notu', text: c.note });
   if (selection) texts.push({ label: 'Seçili metin', text: selection });
+  // Sitenin kendi bildirdiği tarih ve kurum en güvenilir kaynak; önce o gelir.
+  if (c.structured) texts.push({ label: 'Sayfadaki yapılandırılmış veri', text: c.structured });
 
-  const pageText = c.text?.trim() ?? '';
+  // Yapılandırılmış veri varsa sayfanın tamamına gerek yok; model daha kısa metinle hızlı çalışır.
+  const pageText = (c.text?.trim() ?? '').slice(0, c.structured ? STRUCTURED_PAGE_CHARS : undefined);
   let rawText: string | null = selection || null;
   if (pageText.length >= PAGE_TEXT_MIN && !selection) {
     texts.push({ label: `Sayfa: ${c.url ?? ''}`, text: `${c.title ?? ''}\n\n${pageText}` });
     rawText = pageText;
+  } else if (c.structured) {
+    // Yapılandırılmış veri yeterli; sayfa sunucudan yeniden açılmaz.
+    if (c.title) texts.push({ label: 'Sayfa başlığı', text: c.title });
   } else if (c.url && !selection && !c.imageUrl) {
     const page = await readLink(c.url, { fetch: deps.fetch, safeHost: deps.safeHost });
     if (page.ok && page.text.length >= MIN_TEXT_LENGTH) {

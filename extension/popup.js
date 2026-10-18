@@ -1,4 +1,4 @@
-import { DEFAULT_SERVER, FAIL_TEXT, api, dueOf, getConfig, readTab, relative, sendCapture, setConfig, shortDate, waitCapture } from './lib.js';
+import { DEFAULT_SERVER, FAIL_TEXT, api, dueOf, enqueueCapture, getConfig, queueSize, readTab, relative, sendCapture, setConfig, shortDate, waitCapture } from './lib.js';
 
 const $ = (id) => document.getElementById(id);
 let currentTab = null;
@@ -25,6 +25,7 @@ async function showMain() {
   $('pageTitle').textContent = currentTab?.title || currentTab?.url || 'Bu sekme';
   $('save').focus();
   await Promise.all([loadPageState(), loadUpcoming()]);
+  await loadExtras();
 }
 
 async function loadPageState() {
@@ -128,9 +129,12 @@ $('save').addEventListener('click', async () => {
   btn.disabled = true;
   status.className = 'status';
   status.textContent = 'Sayfa okunuyor…';
+  let payload = null;
   try {
     const page = await readTab(currentTab);
-    const id = await sendCapture({ ...page, note: $('note').value });
+    payload = { ...page, note: $('note').value };
+    if (page.structured) status.textContent = 'Sayfanın kendi tarih bilgisi bulundu, okunuyor…';
+    const id = await sendCapture(payload);
     // Pencere kapansa da arka plan takip edip bildirim gösterir.
     chrome.runtime.sendMessage({ type: 'track', id, title: page.title });
     status.textContent = 'Son tarih aranıyor… Pencereyi kapatabilirsin, bitince bildirim gelir.';
@@ -153,6 +157,14 @@ $('save').addEventListener('click', async () => {
     }
   } catch (err) {
     if (err.status === 401) return showConnect();
+    if (err.status === 0 && payload) {
+      const n = await enqueueCapture(payload);
+      status.className = 'status';
+      status.textContent = `Rafta şu an kapalı; sıraya aldım (${n} bekleyen). Açılınca gönderirim.`;
+      $('note').value = '';
+      loadExtras();
+      return;
+    }
     status.className = 'status err';
     status.textContent = err.message;
   } finally {
@@ -162,6 +174,20 @@ $('save').addEventListener('click', async () => {
 
 $('note').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('save').click();
+});
+
+const ALL_SITES = { origins: ['https://*/*', 'http://*/*'] };
+
+async function loadExtras() {
+  const pending = await queueSize();
+  $('queueInfo').hidden = pending === 0;
+  $('queueInfo').textContent = `${pending} kayıt sırada; Rafta açılınca gönderilecek.`;
+  $('highlightBox').hidden = await chrome.permissions.contains(ALL_SITES);
+}
+
+$('allowHighlight').addEventListener('click', async () => {
+  const granted = await chrome.permissions.request(ALL_SITES);
+  $('highlightBox').hidden = granted;
 });
 
 $('disconnect').addEventListener('click', async () => {

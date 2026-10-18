@@ -246,3 +246,14 @@ footer {
   justify-content: space-between;
   margin-top: 14px;
 }
+
+.tip {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+
+.tip p {
+  margin: 4px 0 8px;
+}

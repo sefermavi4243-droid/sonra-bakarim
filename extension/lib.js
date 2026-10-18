@@ -1,5 +1,7 @@
 // Uzantının ortak yardımcıları: ayarlar, API çağrıları, sayfa okuma ve tarih biçimi.
 
+import { readPage } from './page.js';
+
 export const DEFAULT_SERVER = 'http://localhost:3000';
 
 export async function getConfig() {
@@ -45,29 +47,14 @@ export async function api(path, { method = 'GET', body, token } = {}) {
 }
 
 /**
- * Sekmedeki sayfanın metnini tarayıcının içinden okur. Giriş isteyen sayfalarda
- * (LinkedIn gibi) sunucu sayfayı açamaz; bu yüzden metin buradan gönderilir.
+ * Sekmedeki sayfanın metnini ve yapılandırılmış verisini tarayıcının içinden okur.
+ * Giriş isteyen sayfalarda (LinkedIn gibi) sunucu sayfayı açamaz; bu yüzden buradan gönderilir.
  */
 export async function readTab(tab) {
   const base = { url: tab.url, title: tab.title };
   if (!tab.id || !/^https?:/.test(tab.url || '')) return base;
   try {
-    const [res] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => {
-        const root = document.querySelector('article, main, [role="main"]') || document.body;
-        const meta = (name) =>
-          document.querySelector(`meta[property="${name}"], meta[name="${name}"]`)?.getAttribute('content') || '';
-        const description = meta('og:description') || meta('description');
-        const text = [description, root ? root.innerText : ''].filter(Boolean).join('\n\n');
-        return {
-          url: location.href,
-          title: meta('og:title') || document.title,
-          text: text.slice(0, 150000),
-          selection: String(window.getSelection() || '').slice(0, 20000),
-        };
-      },
-    });
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: readPage });
     return { ...base, ...(res?.result || {}) };
   } catch {
     return base;
@@ -76,9 +63,48 @@ export async function readTab(tab) {
 
 /** Kayıt isteğini gönderir; işlem arka planda sürer, durum kimliği döner. */
 export async function sendCapture(payload) {
-  const clean = Object.fromEntries(Object.entries(payload).filter(([, v]) => typeof v === 'string' && v.trim() !== ''));
-  const { id } = await api('/api/capture', { method: 'POST', body: clean });
+  const { id } = await api('/api/capture', { method: 'POST', body: cleanPayload(payload) });
   return id;
+}
+
+export function cleanPayload(payload) {
+  return Object.fromEntries(Object.entries(payload).filter(([, v]) => typeof v === 'string' && v.trim() !== ''));
+}
+
+// --- Sunucu kapalıyken kuyruk ------------------------------------------------------
+
+const QUEUE_KEY = 'queue';
+const QUEUE_MAX = 50;
+
+/** Gönderilemeyen kaydı sıraya koyar (sayfa metni kısaltılarak). */
+export async function enqueueCapture(payload) {
+  const { [QUEUE_KEY]: queue = [] } = await chrome.storage.local.get(QUEUE_KEY);
+  const slim = { ...cleanPayload(payload), text: (payload.text || '').slice(0, 20000) };
+  queue.push({ payload: slim, at: Date.now() });
+  await chrome.storage.local.set({ [QUEUE_KEY]: queue.slice(-QUEUE_MAX) });
+  return queue.length;
+}
+
+/** Sıradakileri gönderir; gönderilen kayıtların kimliklerini döndürür. */
+export async function flushQueue() {
+  const { [QUEUE_KEY]: queue = [] } = await chrome.storage.local.get(QUEUE_KEY);
+  const sent = [];
+  const rest = [];
+  for (const entry of queue) {
+    try {
+      sent.push({ id: await sendCapture(entry.payload), title: entry.payload.title });
+    } catch (err) {
+      // Sunucu hâlâ kapalıysa kalanları beklet; geçersiz istekleri at.
+      if (err.status === 0) rest.push(entry);
+    }
+  }
+  await chrome.storage.local.set({ [QUEUE_KEY]: rest });
+  return sent;
+}
+
+export async function queueSize() {
+  const { [QUEUE_KEY]: queue = [] } = await chrome.storage.local.get(QUEUE_KEY);
+  return queue.length;
 }
 
 /** Kayıt bitene kadar bekler (en fazla 4 dakika). */

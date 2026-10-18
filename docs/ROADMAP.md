@@ -173,6 +173,13 @@ CV eşleştirme, pazar özeti tut/seç/vazgeç akışı) Kapı 1'den sonra.
 - [x] HTTP Shortcuts widget'ı için ayrı cihaz anahtarı ve kurulum adımları.
 - [x] Tailscale ile telefondan erişim (HTTPS, yalnızca kendi ağın; telefon bağlandı).
 
+## Paket 4: Uzantı
+- [x] JSON-LD okuma (iş ilanı, etkinlik, program/burs); tarih Türkçe satır olarak gelir, kanıttan doğrulanır.
+- [x] Yapılandırılmış veri varsa sayfa metni kısalır, sunucu sayfayı yeniden açmaz.
+- [x] Masaüstü hatırlatması (Yaptım / 3 saat ertele), sunucudaki hatırlatma zamanlarıyla.
+- [x] Kaydedilmiş sayfada son tarih vurgusu ve etiket (isteğe bağlı izinle).
+- [x] Sunucu kapalıyken kuyruk ve sonra gönderme.
+
 ## Faz 2–4 (kalan)
 
 Faz 1 kapısı geçilince bu bölüm, Faz 1'deki gibi görevlere ve kabul ölçütlerine
