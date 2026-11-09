@@ -10,3 +10,4 @@ tools/whisper/.venv/
 Thumbs.db
 .vscode/
 .idea/
+*.tsbuildinfo
