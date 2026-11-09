@@ -162,7 +162,7 @@ Rafta tamamen kendi bilgisayarında çalışabilir:
 ### Adımlar
 
 ```bash
-git clone <repo-adresi> rafta
+git clone https://github.com/sefermavi4243-droid/sonra-bakarim.git rafta
 cd rafta
 npm install
 
