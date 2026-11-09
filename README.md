@@ -258,6 +258,10 @@ Tüm ayarlar `.env` dosyasındadır; açıklamalı örnek `.env.example` içinde
 | `QUIET_HOURS` | `22:00-08:00` | Mesaj gönderilmeyen saatler |
 | `APP_URL` | `http://localhost:3000` | Panelin ve takvim aboneliğinin dışarıdan görünen adresi |
 | `HOST` | `127.0.0.1` | Sunucunun dinlediği adres |
+| `PORT` | `3000` | Panel ve API portu |
+| `ADMIN_PORT` | `3001` | Yalnızca `127.0.0.1`'i dinleyen yönetim ucu (`npm run rapor`) |
+| `MEDIA_DIR` | `./data/media` | Yüklenen dosyaların klasörü (Supabase boşsa) |
+| `SUPABASE_*` | | Medyayı Supabase'de tutmak için (isteğe bağlı) |
 
 ## Geliştirme
 
