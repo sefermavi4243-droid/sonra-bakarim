@@ -1,7 +1,13 @@
 {
   "name": "rafta",
   "version": "1.0.0",
-  "description": "WhatsApp üzerinden sonra bakılacak şeyleri yakalayan ve hatırlatan servis",
+  "description": "Telegram, WhatsApp, tarayıcı uzantısı ve web panelinden gelen işleri rafa kaldırıp son tarihinden önce hatırlatan yerel asistan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sefermavi4243-droid/sonra-bakarim.git"
+  },
+  "homepage": "https://github.com/sefermavi4243-droid/sonra-bakarim#readme",
+  "bugs": "https://github.com/sefermavi4243-droid/sonra-bakarim/issues",
   "directories": {
     "doc": "docs"
   },
